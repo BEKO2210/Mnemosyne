@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-04-07T22:57:47.828385",
+  "seed": 42,
+  "limit": 200,
+  "total_time_s": 27.1686,
+  "python_version": "3.11.15 (main, Mar  3 2026, 09:26:23) [GCC 13.3.0]",
+  "suites": {
+    "memory": {
+      "suite": "memory_retrieval",
+      "corpus_size": 800,
+      "n_queries": 8,
+      "recall_at_5": {
+        "mean": 1.0,
+        "ci_lo": 1.0,
+        "ci_hi": 1.0
+      },
+      "recall_at_10": {
+        "mean": 1.0,
+        "ci_lo": 1.0,
+        "ci_hi": 1.0
+      },
+      "ndcg_at_10": {
+        "mean": 1.0,
+        "ci_lo": 1.0,
+        "ci_hi": 1.0
+      },
+      "mrr": {
+        "mean": 1.0,
+        "ci_lo": 1.0,
+        "ci_hi": 1.0
+      },
+      "avg_latency_ms": 35.6,
+      "ingest_time_s": 23.9945
+    },
+    "graph": {
+      "suite": "knowledge_graph",
+      "triples": 1000,
+      "entities": 200,
+      "insert_rate_per_s": 653,
+      "entity_query_ms": 0.21,
+      "temporal_query_ms": 0.21,
+      "timeline_ms": 0.5,
+      "invalidation_ms": 2.3
+    },
+    "intelligence": {
+      "suite": "graph_intelligence",
+      "nodes": 200,
+      "edges": 800,
+      "build_time_ms": 9.5,
+      "pagerank_ms": 8.9,
+      "pagerank_converged": true,
+      "clusters": 8,
+      "cluster_coverage": 1.0,
+      "path_finding_ms": 0.02,
+      "path_success_rate": 1.0,
+      "bridge_detection_ms": 0.8,
+      "bridges_found": 0,
+      "similarity_ms": 0.3,
+      "multihop_ms": 0.1
+    },
+    "signal": {
+      "suite": "signal_processing",
+      "available": true,
+      "steps": 200,
+      "ns_per_step_single": 500.0,
+      "ns_per_step_batch": 0.0,
+      "spike_rate": 0.0,
+      "total_ms_single": 0.1,
+      "total_ms_batch": 0.0
+    },
+    "fusion": {
+      "suite": "total_recall_fusion",
+      "sources_available": [
+        "firstbrain",
+        "cricket"
+      ],
+      "avg_search_ms": 21.85,
+      "avg_hits": 10.0,
+      "degradation": {
+        "full": 5,
+        "mnemosyne_only": 0,
+        "firstbrain_only": 5
+      }
+    }
+  }
+}
