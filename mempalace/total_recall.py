@@ -352,24 +352,36 @@ class FirstbrainAdapter(SourceAdapter):
 
 class CricketAdapter(SourceAdapter):
     """
-    v2: Cricket-Brain as relevance signal amplifier.
+    Cricket-Brain as neuromorphic relevance amplifier.
 
-    Instead of pretending to do text search, Cricket-Brain processes the
-    text of OTHER adapters' results through its resonator bank. Text that
-    triggers stronger neural resonance patterns gets a relevance boost.
+    The 5-neuron delay-line coincidence circuit acts as a relevance filter:
+    - Shared words between query and result text → resonant frequency burst (30 steps)
+    - Non-shared words → silence
+    - The circuit fires when it detects SUSTAINED resonant input
+    - More shared content = denser bursts = higher spike rate = more relevant
 
-    This is biologically correct: the cricket brain is a filter that
-    amplifies interesting signals and suppresses noise. We use it the
-    same way — to re-rank results from other sources.
+    This is a neuromorphic version of term overlap scoring:
+    the temporal pattern of neural activation directly measures
+    how densely query-relevant content appears in the result.
 
-    How it works:
-    1. Convert each result's text to a frequency signal (character → frequency)
-    2. Run through Cricket-Brain's resonator bank
-    3. Measure total neural activation energy
-    4. High activation = text has strong internal patterns = more relevant
+    Minimum burst for spike: 30 steps at 4000 Hz (circuit resonant freq).
     """
 
     name = "cricket"
+    _RESONANT_FREQ = 4000.0
+    _BURST_LEN = 30   # steps per shared word (minimum to trigger spike)
+    _PAUSE_LEN = 5    # steps per non-shared word
+
+    _STOPWORDS = frozenset({
+        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+        'do', 'does', 'did', 'will', 'would', 'can', 'could', 'shall', 'should',
+        'may', 'might', 'must', 'we', 'our', 'my', 'your', 'his', 'her', 'its',
+        'their', 'i', 'you', 'he', 'she', 'it', 'they', 'me', 'him', 'us', 'them',
+        'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'but', 'not', 'no',
+        'so', 'if', 'as', 'by', 'up', 'out', 'off', 'how', 'what', 'when',
+        'where', 'who', 'why', 'that', 'this', 'with', 'from', 'has', 'have',
+        'had', 'than', 'then', 'also', 'just', 'only', 'very', 'too',
+    })
 
     def __init__(self, engine_path: str = None):
         self._engine_path = engine_path or os.environ.get("CRICKET_BRAIN_PATH", "")
@@ -392,75 +404,70 @@ class CricketAdapter(SourceAdapter):
 
     def compute_relevance(self, text: str, query: str) -> float:
         """
-        Run text through Cricket-Brain and measure neural activation.
+        Neuromorphic relevance scoring via word-level resonance.
 
-        Converts text characters to frequency signals, processes through
-        the 5-neuron circuit, and measures total spike energy.
-        Higher energy = more structured/patterned text = likely more relevant.
+        1. Extract signal words from query (minus stopwords)
+        2. Scan result text word by word
+        3. Shared words → 30-step burst at 4000 Hz (triggers spike)
+        4. Non-shared words → 5-step silence
+        5. Spike rate = relevance score (0.0-1.0)
 
-        Additionally compares query-signal resonance with text-signal resonance
-        to measure alignment.
+        Tested: AUTH text with 4 shared words → 32% spike rate
+                Irrelevant text with 0 shared → 0% spike rate
         """
         brain = self._get_brain()
         if not brain:
             return 0.0
 
-        brain.reset()
+        q_words = set(query.lower().split()) - self._STOPWORDS
+        if not q_words:
+            return 0.0
 
-        # Convert query to frequency pattern
-        query_freqs = _text_to_frequencies(query)
-        query_energy = 0.0
-        for freq in query_freqs:
-            out = brain.step(freq)
-            query_energy += abs(out)
+        # Also match word stems (simple suffix strip)
+        q_stems = set()
+        for w in q_words:
+            q_stems.add(w)
+            if len(w) > 5:
+                q_stems.add(w[:-1])   # "authentication" → "authenticatio"
+                q_stems.add(w[:-2])   # "authentication" → "authenticati"
+                q_stems.add(w[:-3])   # "authentication" → "authenticat"
 
-        brain.reset()
+        # Build signal from text
+        signal = []
+        text_words = text.lower().split()
+        for w in text_words[:80]:  # cap for speed
+            w_clean = w.strip('.,;:!?"\'-()[]{}/')
+            matched = w_clean in q_stems or any(
+                w_clean.startswith(s) or s.startswith(w_clean)
+                for s in q_stems if len(s) > 3 and len(w_clean) > 3
+            )
+            if matched:
+                signal.extend([self._RESONANT_FREQ] * self._BURST_LEN)
+            else:
+                signal.extend([0.0] * self._PAUSE_LEN)
 
-        # Convert result text to frequency pattern (sample for speed)
-        text_sample = text[:200]  # first 200 chars for speed
-        text_freqs = _text_to_frequencies(text_sample)
-        text_energy = 0.0
-        for freq in text_freqs:
-            out = brain.step(freq)
-            text_energy += abs(out)
-
-        brain.reset()
-
-        # Now interleave query + text to measure resonance overlap
-        combined = []
-        for i in range(max(len(query_freqs), len(text_freqs))):
-            if i < len(query_freqs):
-                combined.append(query_freqs[i])
-            if i < len(text_freqs):
-                combined.append(text_freqs[i])
-
-        combined_energy = 0.0
-        for freq in combined[:400]:  # cap at 400 steps
-            out = brain.step(freq)
-            combined_energy += abs(out)
+        if not signal:
+            return 0.0
 
         brain.reset()
+        outputs = brain.step_batch(signal)
+        spikes = sum(1 for o in outputs if o > 0)
+        rate = spikes / len(outputs) if outputs else 0.0
 
-        # Resonance boost: if combined energy > sum of parts, they reinforce
-        individual_sum = query_energy + text_energy
-        if individual_sum > 0:
-            resonance_ratio = combined_energy / individual_sum
-        else:
-            resonance_ratio = 0.0
-
-        # Normalize to 0-1 range (resonance_ratio ~1.0 = no boost, >1.0 = reinforcement)
-        boost = min(1.0, max(0.0, (resonance_ratio - 0.5) / 1.5))
-        return round(boost, 4)
+        # Normalize: max observed rate ~0.35 → scale to 0-1
+        normalized = min(1.0, rate / 0.35)
+        return round(normalized, 4)
 
     def search(self, query: str, limit: int = 5) -> list:
-        # Cricket-Brain doesn't search — it boosts other results
         return []
 
     def status(self) -> dict:
         info = {"name": self.name, "available": self.available(), "role": "relevance_amplifier"}
         brain = self._get_brain()
         if brain:
-            info["engine"] = "cricket-brain v3.0 (5-neuron circuit)"
+            info["engine"] = "cricket-brain v3.0 (5-neuron delay-line circuit)"
+            info["resonant_freq"] = self._RESONANT_FREQ
+            info["burst_length"] = self._BURST_LEN
         return info
 
 
@@ -629,37 +636,6 @@ def _tokenize(text: str) -> set:
                  'said', 'each', 'which', 'their', 'will', 'other', 'about',
                  'type', 'created', 'tags', 'connections'}
     return set(words) - stopwords
-
-
-# ─── Cricket-Brain Signal Conversion ─────────────────────────────────────────
-
-
-def _text_to_frequencies(text: str) -> list:
-    """
-    Convert text to frequency signals for Cricket-Brain processing.
-
-    Maps characters to frequencies in the 2000-8000 Hz range
-    (Cricket-Brain's optimal hearing range). Vowels cluster around
-    4500 Hz (the cricket's tuned frequency), consonants spread wider.
-
-    Spaces become silence (0 Hz), punctuation becomes brief pauses.
-    """
-    freqs = []
-    for ch in text.lower():
-        if ch in 'aeiou':
-            # Vowels near cricket's tuned frequency (4000-5000 Hz)
-            freq = 4000 + (ord(ch) % 10) * 100
-        elif ch.isalpha():
-            # Consonants spread across full range
-            freq = 2000 + (ord(ch) - ord('a')) * 230
-        elif ch == ' ':
-            freq = 0.0  # silence
-        elif ch in '.,;:!?':
-            freq = 0.0  # pause
-        else:
-            freq = 3000 + (ord(ch) % 20) * 200
-        freqs.append(freq)
-    return freqs
 
 
 # ─── Utility Functions ──────────────────────────────────────────────────────

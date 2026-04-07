@@ -12,7 +12,6 @@ from mempalace.total_recall import (
     _extract_snippet,
     _is_duplicate,
     _tokenize,
-    _text_to_frequencies,
     _strip_frontmatter,
 )
 
@@ -63,21 +62,44 @@ def test_strip_frontmatter_no_fm():
     assert _strip_frontmatter("# Just text") == "# Just text"
 
 
-# ─── Text-to-frequency conversion ───────────────────────────────────────────
+# ─── Cricket-Brain relevance scoring ─────────────────────────────────────────
 
 
-def test_text_to_frequencies():
-    freqs = _text_to_frequencies("ab ")
-    assert len(freqs) == 3
-    assert freqs[0] > 0  # 'a' → frequency
-    assert freqs[1] > 0  # 'b' → frequency
-    assert freqs[2] == 0  # space → silence
+def test_cricket_relevance_scoring():
+    """Cricket adapter computes meaningful relevance from word overlap."""
+    adapter = CricketAdapter()
+    if not adapter.available():
+        return  # skip if no compiled bindings
+
+    # Relevant text (shares "authentication", "user", "login")
+    boost_auth = adapter.compute_relevance(
+        "User authentication handled via Keycloak for login and security",
+        "How do we handle user authentication and login"
+    )
+
+    # Irrelevant text (no shared words)
+    boost_db = adapter.compute_relevance(
+        "PostgreSQL won over SQLite because we need concurrent writes",
+        "How do we handle user authentication and login"
+    )
+
+    assert boost_auth > boost_db, f"Auth boost {boost_auth} should be > DB boost {boost_db}"
+    assert boost_auth > 0.0
+    assert boost_db == 0.0
 
 
-def test_text_to_frequencies_vowels_near_4500():
-    freqs = _text_to_frequencies("aeiou")
-    for f in freqs:
-        assert 4000 <= f <= 5000, f"Vowel freq {f} outside cricket range"
+def test_cricket_relevance_stems():
+    """Cricket adapter matches word stems, not just exact words."""
+    adapter = CricketAdapter()
+    if not adapter.available():
+        return
+
+    # "authenticate" should match query containing "authentication"
+    boost = adapter.compute_relevance(
+        "We authenticate users via OAuth2 PKCE tokens",
+        "What is the authentication strategy"
+    )
+    assert boost > 0.0
 
 
 # ─── Semantic dedup tests ────────────────────────────────────────────────────
