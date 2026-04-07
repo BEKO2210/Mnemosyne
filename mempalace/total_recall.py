@@ -1,19 +1,20 @@
 """
-total_recall.py — Unified Knowledge API (v2: Tier-1 upgrade)
-==============================================================
+total_recall.py — Unified Knowledge API (v3: Query Expansion via Ollama)
+=========================================================================
 
 Three engines, one query, fused results:
 
     TotalRecall
-    ├── MnemosyneAdapter   — ChromaDB semantic search + temporal KG
-    ├── FirstbrainAdapter  — ChromaDB semantic search + PageRank (vault)
-    └── CricketAdapter     — Relevance scoring via neuromorphic resonance
+    ├── QueryExpander        — Ollama LLM expands queries with related terms
+    ├── MnemosyneAdapter     — ChromaDB semantic search + temporal KG
+    ├── FirstbrainAdapter    — ChromaDB semantic search + PageRank (vault)
+    └── CricketAdapter       — Relevance scoring via neuromorphic resonance
 
-v2 changes (Tier-1):
-  - Firstbrain uses ChromaDB embeddings instead of keyword matching
-  - Cricket-Brain acts as relevance signal amplifier, not fake text search
-  - Cross-source dedup uses semantic similarity, not string prefix
-  - Scoring formula uses real semantic distances everywhere
+v3 changes:
+  - Ollama-based query expansion before search (Recall boost)
+  - Expanded query used for all adapters simultaneously
+  - Original query preserved for Cricket-Brain relevance scoring
+  - Graceful fallback: if Ollama unavailable, uses original query
 """
 
 import os
@@ -21,6 +22,7 @@ import re
 import math
 import hashlib
 import logging
+import json
 from datetime import datetime, date
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -471,14 +473,102 @@ class CricketAdapter(SourceAdapter):
         return info
 
 
-# ─── TotalRecall — The Meta-Layer (v2) ──────────────────────────────────────
+# ─── Query Expansion via Ollama ──────────────────────────────────────────────
+
+
+class QueryExpander:
+    """
+    Uses a local Ollama LLM to expand search queries with related terms.
+
+    "user login" → "user login authentication OAuth2 PKCE session token
+                    credential verification access control SSO"
+
+    This dramatically improves ChromaDB semantic search because the
+    expanded terms overlap with the actual vocabulary in stored documents.
+
+    Graceful fallback: if Ollama is not running, returns the original query.
+    """
+
+    _PROMPT = (
+        "Expand this search query with related technical terms, synonyms, "
+        "and concepts. Return ONLY a single line of expanded search terms. "
+        "No explanation, no numbering, no formatting.\n\n"
+        "Query: {query}\n\nExpanded:"
+    )
+
+    def __init__(self, model: str = None, ollama_url: str = None):
+        self._model = model or os.environ.get("OLLAMA_MODEL", "phi3.5")
+        self._url = ollama_url or os.environ.get("OLLAMA_URL", "http://localhost:11434")
+        self._available = None
+
+    def available(self) -> bool:
+        """Check if Ollama is running and the model is loaded."""
+        if self._available is not None:
+            return self._available
+        try:
+            import urllib.request
+            req = urllib.request.Request(f"{self._url}/api/tags", method="GET")
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                data = json.loads(resp.read())
+                models = [m.get("name", "").split(":")[0] for m in data.get("models", [])]
+                self._available = self._model.split(":")[0] in models
+        except Exception:
+            self._available = False
+        return self._available
+
+    def expand(self, query: str) -> str:
+        """
+        Expand a query using the local LLM.
+        Returns: "original query + expanded terms"
+        Falls back to original query if Ollama unavailable.
+        """
+        if not self.available():
+            return query
+
+        try:
+            import urllib.request
+            payload = json.dumps({
+                "model": self._model,
+                "prompt": self._PROMPT.format(query=query),
+                "stream": False,
+                "options": {"temperature": 0.3, "num_predict": 80},
+            }).encode()
+
+            req = urllib.request.Request(
+                f"{self._url}/api/generate",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read())
+                expanded = data.get("response", "").strip()
+
+            if expanded:
+                # Combine original + expanded for best coverage
+                return f"{query} {expanded}"
+        except Exception as e:
+            logger.debug(f"Query expansion failed: {e}")
+
+        return query
+
+    def status(self) -> dict:
+        return {
+            "available": self.available(),
+            "model": self._model,
+            "url": self._url,
+        }
+
+
+# ─── TotalRecall — The Meta-Layer (v3) ──────────────────────────────────────
 
 
 class TotalRecall:
     """
-    v2: Unified search with real semantic search, real dedup, and
-    Cricket-Brain as relevance amplifier.
+    v3: Unified search with Ollama query expansion, real semantic search,
+    real dedup, and Cricket-Brain as relevance amplifier.
 
+    Pipeline: Query → Expand (Ollama) → Search (all adapters) → Boost (Cricket) → Fuse → Dedup
     Scoring: fused = similarity * w1 + pagerank * w2 + recency * w3 + cricket_boost * w4
     """
 
@@ -487,6 +577,7 @@ class TotalRecall:
         palace_path: str = None,
         vault_path: str = None,
         cricket_path: str = None,
+        ollama_model: str = None,
         similarity_weight: float = 0.45,
         pagerank_weight: float = 0.25,
         recency_weight: float = 0.15,
@@ -499,6 +590,7 @@ class TotalRecall:
             "resonance": resonance_weight,
         }
 
+        self.expander = QueryExpander(model=ollama_model)
         self.adapters = {
             "mnemosyne": MnemosyneAdapter(palace_path=palace_path),
             "firstbrain": FirstbrainAdapter(vault_path=vault_path),
@@ -518,10 +610,18 @@ class TotalRecall:
         all_hits = []
         sources_queried = []
 
+        # Step 1: Query Expansion via Ollama
+        original_query = query
+        expanded_query = self.expander.expand(query)
+        used_expansion = expanded_query != query
+
+        # Use expanded query for semantic search adapters
+        search_query = expanded_query
+
         # Gather hits from text-search adapters
         for name in target_sources:
             if name == "cricket":
-                continue  # cricket doesn't produce hits, it boosts them
+                continue
             adapter = self.adapters.get(name)
             if not adapter or not adapter.available():
                 continue
@@ -529,28 +629,30 @@ class TotalRecall:
             sources_queried.append(name)
 
             if name == "mnemosyne":
-                hits = adapter.search(query, limit=limit, wing=wing, room=room)
+                hits = adapter.search(search_query, limit=limit, wing=wing, room=room)
                 if include_kg:
-                    kg_hits = adapter.kg_search(query)
+                    # KG uses original query (entity names, not expanded)
+                    kg_hits = adapter.kg_search(original_query)
                     hits.extend(kg_hits)
             else:
-                hits = adapter.search(query, limit=limit)
+                hits = adapter.search(search_query, limit=limit)
 
             all_hits.extend(hits)
 
-        # Apply Cricket-Brain relevance boost
+        # Step 2: Cricket-Brain relevance boost (uses ORIGINAL query for precision)
         cricket = self.adapters.get("cricket")
         if cricket and cricket.available():
             sources_queried.append("cricket")
             for hit in all_hits:
-                boost = cricket.compute_relevance(hit.text, query)
+                boost = cricket.compute_relevance(hit.text, original_query)
                 hit.relevance_boost = boost
 
-        # Fuse, dedup, rank
-        ranked = self._fuse_and_rank(all_hits, limit, query)
+        # Step 3: Fuse, dedup, rank
+        ranked = self._fuse_and_rank(all_hits, limit, original_query)
 
         return {
-            "query": query,
+            "query": original_query,
+            "expanded_query": expanded_query if used_expansion else None,
             "sources_queried": sources_queried,
             "total_hits": len(all_hits),
             "results": [_hit_to_dict(h) for h in ranked],
@@ -561,7 +663,12 @@ class TotalRecall:
         for name, adapter in self.adapters.items():
             source_status[name] = adapter.status()
         available = [n for n, a in self.adapters.items() if a.available()]
-        return {"sources": source_status, "available": available, "weights": self.weights}
+        return {
+            "sources": source_status,
+            "available": available,
+            "weights": self.weights,
+            "query_expansion": self.expander.status(),
+        }
 
     def configure(self, **kwargs) -> dict:
         for key in ("similarity_weight", "pagerank_weight", "recency_weight", "resonance_weight"):
