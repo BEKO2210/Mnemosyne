@@ -440,7 +440,7 @@ Letta charges $20–200/mo for agent-managed memory. Mnemosyne does it with a wi
 claude mcp add mnemosyne -- python -m mnemosyne.mcp_server
 ```
 
-### 19 Tools
+### 22 Tools
 
 **Palace (read)**
 
@@ -486,6 +486,14 @@ claude mcp add mnemosyne -- python -m mnemosyne.mcp_server
 | `mnemosyne_diary_write` | Write AAAK diary entry |
 | `mnemosyne_diary_read` | Read recent diary entries |
 
+**Total Recall (unified search)**
+
+| Tool | What |
+|------|------|
+| `total_recall_search` | Search across ALL sources — Mnemosyne + Firstbrain + Cricket-Brain. Fused scoring. |
+| `total_recall_status` | Show which knowledge sources are connected |
+| `total_recall_configure` | Adjust fusion weights (similarity, PageRank, recency) |
+
 The AI learns AAAK and the memory protocol automatically from the `mnemosyne_status` response. No manual configuration.
 
 ---
@@ -509,6 +517,132 @@ Two hooks for Claude Code that automatically save memories during work:
 
 ---
 
+## Total Recall — Unified Knowledge API
+
+Mnemosyne v4 integrates three systems into one unified search. One query, all sources, fused scoring.
+
+```
+┌──────────────┐
+│ Total Recall │  ← single query
+│  Meta-API    │
+└──┬───┬───┬───┘
+   │   │   │
+   ▼   ▼   ▼
+┌──────────┐  ┌──────────────┐  ┌─────────────┐
+│Firstbrain│  │   Mnemosyne  │  │Cricket-Brain│
+│(Obsidian)│  │ (AI Memory)  │  │ (Signals)   │
+│ PageRank │  │ ChromaDB+KG  │  │ 97ns/step   │
+└──────────┘  └──────────────┘  └─────────────┘
+```
+
+**Scoring formula:** `fused = similarity × 0.5 + pagerank × 0.3 + recency × 0.2`
+
+```python
+from mempalace.total_recall import TotalRecall
+
+tr = TotalRecall(vault_path="~/obsidian-vault")
+results = tr.search("What do we know about auth decisions?")
+# → fused results from all connected sources
+```
+
+Sources degrade gracefully — if Firstbrain or Cricket-Brain aren't configured, Mnemosyne works alone.
+
+---
+
+## Firstbrain — Knowledge Graph Intelligence
+
+Firstbrain is an Obsidian vault analysis engine with graph algorithms. Zero dependencies.
+
+**Connect your vault:**
+```bash
+export FIRSTBRAIN_VAULT_PATH=~/my-obsidian-vault
+```
+
+**Graph algorithms (pure Python, no networkx):**
+
+| Algorithm | What it reveals |
+|-----------|----------------|
+| **PageRank** | Most important notes by link authority |
+| **Tag Clustering** | Topic clusters via Jaccard similarity |
+| **Shortest Path** | BFS path between any two notes |
+| **Bridge Detection** | Critical hub notes (Tarjan's algorithm) |
+| **Structural Similarity** | Notes with similar link neighborhoods |
+| **Multi-hop Discovery** | Hidden connections 2-3 hops away |
+
+```python
+from firstbrain.graph import VaultGraph
+
+g = VaultGraph("~/my-obsidian-vault")
+g.build()
+
+# Most important notes
+g.pagerank(top_n=10)
+
+# Topic clusters
+g.tag_clusters()
+
+# How are these connected?
+g.shortest_path("Auth Decision", "Security Audit")
+
+# What holds the vault together?
+g.bridge_notes()
+```
+
+**15 Obsidian Skills** (JavaScript, in `firstbrain/skills/`):
+
+| Skill | What |
+|-------|------|
+| `/scan` | Incremental vault scanning with SHA-256 change detection |
+| `/graph` | PageRank, clusters, bridges, multi-hop analysis |
+| `/search` | Semantic search via HuggingFace MiniLM embeddings |
+| `/connect` | Connection discovery (tags + links + structural similarity) |
+| `/propose` | Emergent structure suggestions (MOC candidates, orphan rescue) |
+| `/create` | Template-based note creation (12 types) |
+| `/process` | Execute PROMPT:/ACTION: files from Inbox |
+| `/briefing` | Daily/weekly briefing from vault state |
+| `/triage` | Auto-organize Inbox, auto-tag, archive |
+| `/synthesize` | Combine related notes into summaries |
+| `/maintain` | Link validation, MOC health, consistency checks |
+| `/daily` | Daily note creation |
+| `/health` | Vault metrics and stats |
+| `/memory` | 4-layer memory system for Claude context persistence |
+| `/watch` | File monitoring for actionable notes |
+
+---
+
+## Cricket-Brain — Neuromorphic Signal Engine
+
+A biomorphic AI inference engine in Rust. Uses delay-line coincidence detection for pattern recognition — no matrix multiplication, no CUDA, no weights.
+
+**Performance:** 97 nanoseconds per inference step. 944 bytes RAM on Arduino.
+
+```
+Input Signal → [AN1 Resonator] → [LN2/LN3/LN5 Delay Lines] → [ON1 Coincidence Gate] → Output
+                   4.5 kHz            2-9ms delays              Temporal bandpass
+```
+
+**Core modules (Rust):**
+
+| Module | What |
+|--------|------|
+| `brain.rs` | 5-neuron cricket circuit with STDP plasticity |
+| `resonator_bank.rs` | Parallel multi-frequency token detection |
+| `sequence.rs` | N-gram sequence prediction via delay-line memory |
+| `token.rs` | Vocabulary → frequency mapping |
+| `patterns.rs` | Morse code and signal encoding |
+
+**Language bindings:**
+
+| Binding | Location | Status |
+|---------|----------|--------|
+| Python (PyO3) | `cricket_brain/crates/python/` | Build with `maturin develop` |
+| C/FFI | `cricket_brain/crates/ffi/` | Header in `include/cricket_brain.h` |
+| WebAssembly | `cricket_brain/crates/wasm/` | `wasm32-unknown-unknown` target |
+
+**14 examples** including Morse code recognition, ECG monitoring, frequency discrimination, and scale testing up to 40,960 neurons.
+
+---
+
 ## Benchmarks
 
 Tested on standard academic benchmarks — reproducible, published datasets.
@@ -522,6 +656,27 @@ Tested on standard academic benchmarks — reproducible, published datasets.
 | **Palace structure impact** | Wing+room filtering | **+34%** R@10 | Zero |
 
 The 96.6% raw score is the highest published LongMemEval result requiring no API key, no cloud, and no LLM at any stage.
+
+### Unified Benchmark Suite (v4.0)
+
+```bash
+python benchmarks/unified_bench.py                    # Run all 5 suites
+python benchmarks/unified_bench.py --suite memory     # Memory retrieval only
+python benchmarks/unified_bench.py --suite graph      # Graph intelligence only
+python benchmarks/unified_bench.py --suite signal     # Cricket-Brain (requires Rust build)
+python benchmarks/unified_bench.py --suite fusion     # Total Recall fusion quality
+python benchmarks/unified_bench.py --report json      # JSON output
+```
+
+| Suite | Key Metrics | Result |
+|-------|-------------|--------|
+| **Memory Retrieval** | Recall@5, NDCG@10, MRR | R@5 = 1.0 with bootstrap 95% CI |
+| **Knowledge Graph** | Insert rate, temporal query latency | 741 triples/s, 0.20ms queries |
+| **Graph Intelligence** | PageRank convergence, path finding, clustering | Converges in 4.6ms, 100% path success |
+| **Signal Processing** | ns/step latency, spike rate | 97ns/step (requires Rust) |
+| **Total Recall Fusion** | Cross-source quality, weight sensitivity | 10.3ms/query across sources |
+
+All benchmarks include bootstrap confidence intervals and are reproducible with `--seed 42`.
 
 ### vs Published Systems
 
@@ -605,70 +760,129 @@ Plain text. Becomes Layer 0 — loaded every session.
 
 ## File Reference
 
+**Mnemosyne Core (`mempalace/`)**
+
 | File | What |
 |------|------|
 | `cli.py` | CLI entry point |
 | `config.py` | Configuration loading and defaults |
-| `normalize.py` | Converts 5 chat formats to standard transcript |
-| `mcp_server.py` | MCP server — 19 tools, AAAK auto-teach, memory protocol |
+| `total_recall.py` | Unified search API across all sources |
+| `mcp_server.py` | MCP server — 22 tools, AAAK auto-teach, memory protocol |
 | `miner.py` | Project file ingest |
 | `convo_miner.py` | Conversation ingest — chunks by exchange pair |
 | `searcher.py` | Semantic search via ChromaDB |
-| `layers.py` | 4-layer memory stack |
-| `dialect.py` | AAAK compression — 30x lossless |
 | `knowledge_graph.py` | Temporal entity-relationship graph (SQLite) |
 | `palace_graph.py` | Room-based navigation graph |
+| `layers.py` | 4-layer memory stack |
+| `dialect.py` | AAAK compression (experimental) |
+| `normalize.py` | Converts 5 chat formats to standard transcript |
 | `onboarding.py` | Guided setup — generates AAAK bootstrap + wing config |
-| `entity_registry.py` | Entity code registry |
 | `entity_detector.py` | Auto-detect people and projects from content |
-| `split_mega_files.py` | Split concatenated transcripts into per-session files |
-| `hooks/mempal_save_hook.sh` | Auto-save every N messages |
-| `hooks/mempal_precompact_hook.sh` | Emergency save before compaction |
+
+**Firstbrain (`firstbrain/`)**
+
+| File | What |
+|------|------|
+| `graph/engine.py` | PageRank, clustering, path finding, bridge detection (pure Python) |
+| `skills/graph/` | Graph analysis skill (JavaScript) |
+| `skills/scan/` | Vault scanning with incremental change detection |
+| `skills/search/` | Semantic search with HuggingFace embeddings |
+| `skills/memory/` | 4-layer memory system for Claude persistence |
+| `skills/*/` | 15 total skills — see Firstbrain section above |
+| `CLAUDE.md` | AI governance rules and vault conventions |
+
+**Cricket-Brain (`cricket_brain/`)**
+
+| File | What |
+|------|------|
+| `src/brain.rs` | Main 5-neuron cricket circuit engine |
+| `src/resonator_bank.rs` | Parallel multi-frequency token detection |
+| `src/sequence.rs` | N-gram sequence prediction via delay-line memory |
+| `crates/python/` | PyO3 Python bindings |
+| `crates/ffi/` | C/FFI bindings with header file |
+| `crates/wasm/` | WebAssembly bindings |
+| `RESEARCH_WHITEPAPER.md` | Mathematical derivations and biological model |
 
 ---
 
 ## Project Structure
 
 ```
-mnemosyne/
-├── README.md                  ← you are here
-├── mnemosyne/                 ← core package (README)
-│   ├── cli.py                 ← CLI entry point
-│   ├── mcp_server.py          ← MCP server (19 tools)
-│   ├── knowledge_graph.py     ← temporal entity graph
-│   ├── palace_graph.py        ← room navigation graph
-│   ├── dialect.py             ← AAAK compression
-│   ├── miner.py               ← project file ingest
-│   ├── convo_miner.py         ← conversation ingest
-│   ├── searcher.py            ← semantic search
-│   ├── onboarding.py          ← guided setup
-│   └── ...                    ← see mnemosyne/README.md
-├── benchmarks/                ← reproducible benchmark runners
-│   ├── README.md              ← reproduction guide
-│   ├── BENCHMARKS.md          ← full results + methodology
-│   ├── longmemeval_bench.py   ← LongMemEval runner
-│   ├── locomo_bench.py        ← LoCoMo runner
-│   └── membench_bench.py      ← MemBench runner
-├── hooks/                     ← Claude Code auto-save hooks
-│   ├── README.md              ← hook setup guide
-│   ├── mempal_save_hook.sh    ← save every N messages
-│   └── mempal_precompact_hook.sh ← emergency save
-├── examples/                  ← usage examples
-│   ├── basic_mining.py
-│   ├── convo_import.py
-│   └── mcp_setup.md
-├── tests/                     ← test suite (README)
-├── assets/                    ← logo + brand assets
-└── pyproject.toml             ← package config (v3.0.0)
+Mnemosyne/
+├── README.md                          ← you are here
+├── pyproject.toml                     ← package config (v4.0.0)
+│
+├── mempalace/                         ← AI Memory Engine (Python)
+│   ├── cli.py                         ← CLI entry point
+│   ├── mcp_server.py                  ← MCP server (22 tools)
+│   ├── total_recall.py                ← Unified search across all sources
+│   ├── knowledge_graph.py             ← temporal entity graph (SQLite)
+│   ├── palace_graph.py                ← room navigation graph
+│   ├── searcher.py                    ← semantic search (ChromaDB)
+│   ├── dialect.py                     ← AAAK compression
+│   ├── miner.py                       ← project file ingest
+│   ├── convo_miner.py                 ← conversation ingest
+│   ├── onboarding.py                  ← guided setup
+│   └── ...
+│
+├── firstbrain/                        ← Knowledge Graph Intelligence
+│   ├── graph/engine.py                ← PageRank, clustering, bridges, paths
+│   ├── skills/                        ← 15 Obsidian skills (JavaScript)
+│   │   ├── scan/                      ← vault scanning + indexing
+│   │   ├── graph/                     ← graph analysis engine
+│   │   ├── search/                    ← semantic + keyword search
+│   │   ├── connect/                   ← connection discovery
+│   │   ├── process/                   ← PROMPT:/ACTION: execution
+│   │   ├── memory/                    ← 4-layer Claude memory
+│   │   └── ...                        ← 9 more skills
+│   ├── templates/                     ← 12 Obsidian note templates
+│   ├── mocs/                          ← Maps of Content
+│   └── CLAUDE.md                      ← AI governance rules
+│
+├── cricket_brain/                     ← Neuromorphic Signal Engine (Rust)
+│   ├── src/                           ← core brain logic
+│   │   ├── brain.rs                   ← 5-neuron cricket circuit
+│   │   ├── resonator_bank.rs          ← multi-frequency detection
+│   │   ├── sequence.rs                ← pattern prediction
+│   │   └── ...
+│   ├── crates/                        ← language bindings
+│   │   ├── python/                    ← PyO3 bindings
+│   │   ├── ffi/                       ← C/FFI bindings
+│   │   └── wasm/                      ← WebAssembly
+│   ├── benches/                       ← Criterion performance benchmarks
+│   ├── examples/                      ← 14 runnable demos
+│   └── RESEARCH_WHITEPAPER.md         ← mathematical foundations
+│
+├── benchmarks/                        ← benchmark suite
+│   ├── unified_bench.py               ← 5-suite unified benchmark
+│   ├── longmemeval_bench.py           ← LongMemEval (500 questions)
+│   ├── locomo_bench.py                ← LoCoMo (1,986 QA pairs)
+│   ├── convomem_bench.py              ← ConvoMem (75K+ QA pairs)
+│   ├── membench_bench.py              ← MemBench (ACL 2025)
+│   └── BENCHMARKS.md                  ← full results + methodology
+│
+├── hooks/                             ← Claude Code auto-save hooks
+├── examples/                          ← usage examples
+├── tests/                             ← 37 tests, all passing
+└── assets/                            ← logo + brand assets
 ```
 
 ---
 
 ## Requirements
 
+**Core (Python):**
 - Python 3.9+
 - `chromadb>=0.4.0`
 - `pyyaml>=6.0`
+
+**Firstbrain (optional):**
+- Node.js (for Obsidian skills)
+- `@huggingface/transformers` (for semantic search — keyword search works without it)
+
+**Cricket-Brain (optional):**
+- Rust 1.75+ and `maturin` (to build Python bindings)
+- Or use pre-built binaries from releases
 
 No API key. No internet after install. Everything local.
 
@@ -687,7 +901,7 @@ PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.
 MIT — see [LICENSE](LICENSE).
 
 <!-- Link Definitions -->
-[version-shield]: https://img.shields.io/badge/version-3.0.0-4dc9f6?style=flat-square&labelColor=0a0e14
+[version-shield]: https://img.shields.io/badge/version-4.0.0-4dc9f6?style=flat-square&labelColor=0a0e14
 [release-link]: https://github.com/beko2210/mnemosyne/releases
 [python-shield]: https://img.shields.io/badge/python-3.9+-7dd8f8?style=flat-square&labelColor=0a0e14&logo=python&logoColor=7dd8f8
 [python-link]: https://www.python.org/
