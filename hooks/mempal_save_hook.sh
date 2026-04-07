@@ -1,5 +1,5 @@
 #!/bin/bash
-# MNEMOSYNE SAVE HOOK — Auto-save every N exchanges
+# MEMPALACE SAVE HOOK — Auto-save every N exchanges
 #
 # Claude Code "Stop" hook. After every assistant response:
 # 1. Counts human messages in the session transcript
@@ -44,16 +44,16 @@
 # The AI then saves to memory, and when it tries to stop again,
 # stop_hook_active=true so we let it through. No infinite loop.
 #
-# === MNEMOSYNE CLI ===
-# This repo uses: mnemosyne mine <dir>
-# or:            mnemosyne mine <dir> --mode convos
+# === MEMPALACE CLI ===
+# This repo uses: mempalace mine <dir>
+# or:            mempalace mine <dir> --mode convos
 # Set MEMPAL_DIR below if you want the hook to auto-ingest after blocking.
 # Leave blank to rely on the AI's own save instructions.
 #
 # === CONFIGURATION ===
 
 SAVE_INTERVAL=15  # Save every N human messages (adjust to taste)
-STATE_DIR="$HOME/.mnemosyne/hook_state"
+STATE_DIR="$HOME/.mempalace/hook_state"
 mkdir -p "$STATE_DIR"
 
 # Optional: set to the directory you want auto-ingested on each save trigger.
@@ -113,7 +113,7 @@ fi
 
 SINCE_LAST=$((EXCHANGE_COUNT - LAST_SAVE))
 
-# Log for debugging (check ~/.mnemosyne/hook_state/hook.log)
+# Log for debugging (check ~/.mempalace/hook_state/hook.log)
 echo "[$(date '+%H:%M:%S')] Session $SESSION_ID: $EXCHANGE_COUNT exchanges, $SINCE_LAST since last save" >> "$STATE_DIR/hook.log"
 
 # Time to save?
@@ -123,11 +123,11 @@ if [ "$SINCE_LAST" -ge "$SAVE_INTERVAL" ] && [ "$EXCHANGE_COUNT" -gt 0 ]; then
 
     echo "[$(date '+%H:%M:%S')] TRIGGERING SAVE at exchange $EXCHANGE_COUNT" >> "$STATE_DIR/hook.log"
 
-    # Optional: run mnemosyne ingest in background if MEMPAL_DIR is set
+    # Optional: run mempalace ingest in background if MEMPAL_DIR is set
     if [ -n "$MEMPAL_DIR" ] && [ -d "$MEMPAL_DIR" ]; then
         SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         REPO_DIR="$(dirname "$SCRIPT_DIR")"
-        python3 -m mnemosyne mine "$MEMPAL_DIR" >> "$STATE_DIR/hook.log" 2>&1 &
+        python3 -m mempalace mine "$MEMPAL_DIR" >> "$STATE_DIR/hook.log" 2>&1 &
     fi
 
     # Block the AI and tell it to save

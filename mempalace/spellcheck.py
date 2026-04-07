@@ -15,7 +15,7 @@ Corrects:
   - Common fat-finger words (3am → 3am, knoe → know)
 
 Usage:
-    from mnemosyne.spellcheck import spellcheck_user_text
+    from mempalace.spellcheck import spellcheck_user_text
     corrected = spellcheck_user_text("lsresdy knoe the question befor")
     # → "already know the question before"  (best effort)
 """
@@ -65,7 +65,7 @@ def _get_system_words() -> set:
 # Matches any token with a digit anywhere in it: 3am, bge-large-v1.5, top-10
 _HAS_DIGIT = re.compile(r"\d")
 
-# CamelCase: ChromaDB, Mnemosyne, LongMemEval
+# CamelCase: ChromaDB, MemPalace, LongMemEval
 _IS_CAMEL = re.compile(r"[A-Z][a-z]+[A-Z]")
 
 # ALL_CAPS or all-caps with underscores: NDCG, R@5, MAX_RESULTS
@@ -115,7 +115,7 @@ def _should_skip(token: str, known_names: set) -> bool:
 def _load_known_names() -> set:
     """Pull all registered names from EntityRegistry. Returns empty set on failure."""
     try:
-        from mnemosyne.entity_registry import EntityRegistry
+        from mempalace.entity_registry import EntityRegistry
 
         reg = EntityRegistry.load()
         names = set()
@@ -251,7 +251,7 @@ if __name__ == "__main__":
         "isn't there meny diferent benchmarks tesing questions?",
         "also can you pleese spell chekc my questions befroe storing",
         "it's realy hard for me to writte coherently at 3am",
-        "Mnemosyne cant be fine-tunned if you alredy kno the question",
+        "Mempalace cant be fine-tunned if you alredy kno the question",
         # Should NOT change these:
         "ChromaDB bge-large-en-v1.5 NDCG@10 R@5",
         "Riley picked up Sam from school",
@@ -260,7 +260,7 @@ if __name__ == "__main__":
 
     print("Spell-check test\n" + "=" * 50)
     for msg in test_cases:
-        result = spellcheck_user_text(msg, known_names={"riley", "sam", "mnemosyne"})
+        result = spellcheck_user_text(msg, known_names={"riley", "sam", "mempalace"})
         changed = " ← CHANGED" if result != msg else ""
         print(f"\nIN:  {msg}")
         if result != msg:

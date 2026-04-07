@@ -1,5 +1,5 @@
 """
-palace_graph.py — Graph traversal layer for Mnemosyne
+palace_graph.py — Graph traversal layer for MemPalace
 ======================================================
 
 Builds a navigable graph from the palace structure:
@@ -16,13 +16,13 @@ No external graph DB needed — built from ChromaDB metadata.
 """
 
 from collections import defaultdict, Counter
-from .config import MnemosyneConfig
+from .config import MempalaceConfig
 
 import chromadb
 
 
 def _get_collection(config=None):
-    config = config or MnemosyneConfig()
+    config = config or MempalaceConfig()
     try:
         client = chromadb.PersistentClient(path=config.palace_path)
         return client.get_collection(config.collection_name)

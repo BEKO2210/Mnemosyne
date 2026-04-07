@@ -4,7 +4,7 @@ room_detector_local.py — Local setup, no API required.
 
 Two ways to define rooms without calling any AI:
   1. Auto-detect from folder structure (zero config)
-  2. Define manually in mnemosyne.yaml
+  2. Define manually in mempalace.yaml
 
 No internet. No API key. Your files stay on your machine.
 """
@@ -205,7 +205,7 @@ def detect_rooms_from_files(project_dir: str) -> list:
 
 def print_proposed_structure(project_name: str, rooms: list, total_files: int, source: str):
     print(f"\n{'=' * 55}")
-    print("  Mnemosyne Init — Local setup")
+    print("  MemPalace Init — Local setup")
     print(f"{'=' * 55}")
     print(f"\n  WING: {project_name}")
     print(f"  ({total_files} files found, rooms detected from {source})\n")
@@ -264,13 +264,13 @@ def save_config(project_dir: str, project_name: str, rooms: list):
             for r in rooms
         ],
     }
-    config_path = Path(project_dir).expanduser().resolve() / "mnemosyne.yaml"
+    config_path = Path(project_dir).expanduser().resolve() / "mempalace.yaml"
     with open(config_path, "w") as f:
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
     print(f"\n  Config saved: {config_path}")
     print("\n  Next step:")
-    print(f"    mnemosyne mine {project_dir}")
+    print(f"    mempalace mine {project_dir}")
     print(f"\n{'=' * 55}\n")
 
 

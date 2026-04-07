@@ -1,5 +1,5 @@
 """
-knowledge_graph.py — Temporal Entity-Relationship Graph for Mnemosyne
+knowledge_graph.py — Temporal Entity-Relationship Graph for MemPalace
 =====================================================================
 
 Real knowledge graph with:
@@ -15,7 +15,7 @@ This is what competes with Zep's temporal knowledge graph.
 Zep uses Neo4j in the cloud ($25/mo+). We use SQLite locally (free).
 
 Usage:
-    from mnemosyne.knowledge_graph import KnowledgeGraph
+    from mempalace.knowledge_graph import KnowledgeGraph
 
     kg = KnowledgeGraph()
     kg.add_triple("Max", "child_of", "Alice", valid_from="2015-04-01")
@@ -43,7 +43,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 
-DEFAULT_KG_PATH = os.path.expanduser("~/.mnemosyne/knowledge_graph.sqlite3")
+DEFAULT_KG_PATH = os.path.expanduser("~/.mempalace/knowledge_graph.sqlite3")
 
 
 class KnowledgeGraph:

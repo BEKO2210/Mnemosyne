@@ -1,6 +1,6 @@
-# Mnemosyne Hooks — Auto-Save for Terminal AI Tools
+# MemPalace Hooks — Auto-Save for Terminal AI Tools
 
-These hook scripts make Mnemosyne save automatically. No manual "save" commands needed.
+These hook scripts make MemPalace save automatically. No manual "save" commands needed.
 
 ## What They Do
 
@@ -66,16 +66,16 @@ Add to `.codex/hooks.json`:
 Edit `mempal_save_hook.sh` to change:
 
 - **`SAVE_INTERVAL=15`** — How many human messages between saves. Lower = more frequent saves, higher = less interruption.
-- **`STATE_DIR`** — Where hook state is stored (defaults to `~/.mnemosyne/hook_state/`)
-- **`MEMPAL_DIR`** — Optional. Set to a conversations directory to auto-run `mnemosyne mine <dir>` on each save trigger. Leave blank (default) to let the AI handle saving via the block reason message.
+- **`STATE_DIR`** — Where hook state is stored (defaults to `~/.mempalace/hook_state/`)
+- **`MEMPAL_DIR`** — Optional. Set to a conversations directory to auto-run `mempalace mine <dir>` on each save trigger. Leave blank (default) to let the AI handle saving via the block reason message.
 
-### mnemosyne CLI
+### mempalace CLI
 
 The relevant commands are:
 
 ```bash
-mnemosyne mine <dir>               # Mine all files in a directory
-mnemosyne mine <dir> --mode convos # Mine conversation transcripts only
+mempalace mine <dir>               # Mine all files in a directory
+mempalace mine <dir> --mode convos # Mine conversation transcripts only
 ```
 
 The hooks resolve the repo root automatically from their own path, so they work regardless of where you install the repo.
@@ -122,7 +122,7 @@ No counting needed — compaction always warrants a save.
 
 Check the hook log:
 ```bash
-cat ~/.mnemosyne/hook_state/hook.log
+cat ~/.mempalace/hook_state/hook.log
 ```
 
 Example output:

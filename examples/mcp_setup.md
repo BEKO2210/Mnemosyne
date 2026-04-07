@@ -11,7 +11,7 @@ python mcp_server.py
 Or add to Claude Code:
 
 ```bash
-claude mcp add mempal -- python /path/to/mnemosyne/mcp_server.py
+claude mcp add mempal -- python /path/to/mempalace/mcp_server.py
 ```
 
 ## Available Tools

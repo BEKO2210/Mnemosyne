@@ -2,7 +2,7 @@
 """
 miner.py — Files everything into the palace.
 
-Reads mnemosyne.yaml from the project directory to know the wing + rooms.
+Reads mempalace.yaml from the project directory to know the wing + rooms.
 Routes each file to the right room based on content.
 Stores verbatim chunks as drawers. No summaries. Ever.
 """
@@ -51,7 +51,7 @@ SKIP_DIRS = {
     "build",
     ".next",
     "coverage",
-    ".mnemosyne",
+    ".mempalace",
     ".ruff_cache",
     ".mypy_cache",
     ".pytest_cache",
@@ -67,8 +67,8 @@ SKIP_DIRS = {
 }
 
 SKIP_FILENAMES = {
-    "mnemosyne.yaml",
-    "mnemosyne.yml",
+    "mempalace.yaml",
+    "mempalace.yml",
     "mempal.yaml",
     "mempal.yml",
     ".gitignore",
@@ -276,18 +276,18 @@ def is_force_included(path: Path, project_path: Path, include_paths: set) -> boo
 
 
 def load_config(project_dir: str) -> dict:
-    """Load mnemosyne.yaml from project directory (falls back to mempal.yaml)."""
+    """Load mempalace.yaml from project directory (falls back to mempal.yaml)."""
     import yaml
 
-    config_path = Path(project_dir).expanduser().resolve() / "mnemosyne.yaml"
+    config_path = Path(project_dir).expanduser().resolve() / "mempalace.yaml"
     if not config_path.exists():
         # Fallback to legacy name
         legacy_path = Path(project_dir).expanduser().resolve() / "mempal.yaml"
         if legacy_path.exists():
             config_path = legacy_path
         else:
-            print(f"ERROR: No mnemosyne.yaml found in {project_dir}")
-            print(f"Run: mnemosyne init {project_dir}")
+            print(f"ERROR: No mempalace.yaml found in {project_dir}")
+            print(f"Run: mempalace init {project_dir}")
             sys.exit(1)
     with open(config_path) as f:
         return yaml.safe_load(f)
@@ -396,9 +396,9 @@ def get_collection(palace_path: str):
     os.makedirs(palace_path, exist_ok=True)
     client = chromadb.PersistentClient(path=palace_path)
     try:
-        return client.get_collection("mnemosyne_drawers")
+        return client.get_collection("mempalace_drawers")
     except Exception:
-        return client.create_collection("mnemosyne_drawers")
+        return client.create_collection("mempalace_drawers")
 
 
 def file_already_mined(collection, source_file: str) -> bool:
@@ -560,7 +560,7 @@ def mine(
     project_dir: str,
     palace_path: str,
     wing_override: str = None,
-    agent: str = "mnemosyne",
+    agent: str = "mempalace",
     limit: int = 0,
     dry_run: bool = False,
     respect_gitignore: bool = True,
@@ -583,7 +583,7 @@ def mine(
         files = files[:limit]
 
     print(f"\n{'=' * 55}")
-    print("  Mnemosyne Mine")
+    print("  MemPalace Mine")
     print(f"{'=' * 55}")
     print(f"  Wing:    {wing}")
     print(f"  Rooms:   {', '.join(r['name'] for r in rooms)}")
@@ -633,7 +633,7 @@ def mine(
     print("\n  By room:")
     for room, count in sorted(room_counts.items(), key=lambda x: x[1], reverse=True):
         print(f"    {room:20} {count} files")
-    print('\n  Next: mnemosyne search "what you\'re looking for"')
+    print('\n  Next: mempalace search "what you\'re looking for"')
     print(f"{'=' * 55}\n")
 
 
@@ -646,10 +646,10 @@ def status(palace_path: str):
     """Show what's been filed in the palace."""
     try:
         client = chromadb.PersistentClient(path=palace_path)
-        col = client.get_collection("mnemosyne_drawers")
+        col = client.get_collection("mempalace_drawers")
     except Exception:
         print(f"\n  No palace found at {palace_path}")
-        print("  Run: mnemosyne init <dir> then mnemosyne mine <dir>")
+        print("  Run: mempalace init <dir> then mempalace mine <dir>")
         return
 
     # Count by wing and room
@@ -661,7 +661,7 @@ def status(palace_path: str):
         wing_rooms[m.get("wing", "?")][m.get("room", "?")] += 1
 
     print(f"\n{'=' * 55}")
-    print(f"  Mnemosyne Status — {len(metas)} drawers")
+    print(f"  MemPalace Status — {len(metas)} drawers")
     print(f"{'=' * 55}\n")
     for wing, rooms in sorted(wing_rooms.items()):
         print(f"  WING: {wing}")

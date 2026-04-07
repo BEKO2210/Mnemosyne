@@ -1,15 +1,15 @@
 """
-Mnemosyne configuration system.
+MemPalace configuration system.
 
-Priority: env vars > config file (~/.mnemosyne/config.json) > defaults
+Priority: env vars > config file (~/.mempalace/config.json) > defaults
 """
 
 import json
 import os
 from pathlib import Path
 
-DEFAULT_PALACE_PATH = os.path.expanduser("~/.mnemosyne/palace")
-DEFAULT_COLLECTION_NAME = "mnemosyne_drawers"
+DEFAULT_PALACE_PATH = os.path.expanduser("~/.mempalace/palace")
+DEFAULT_COLLECTION_NAME = "mempalace_drawers"
 
 DEFAULT_TOPIC_WINGS = [
     "emotions",
@@ -62,8 +62,8 @@ DEFAULT_HALL_KEYWORDS = {
 }
 
 
-class MnemosyneConfig:
-    """Configuration manager for Mnemosyne.
+class MempalaceConfig:
+    """Configuration manager for MemPalace.
 
     Load order: env vars > config file > defaults.
     """
@@ -73,10 +73,10 @@ class MnemosyneConfig:
 
         Args:
             config_dir: Override config directory (useful for testing).
-                        Defaults to ~/.mnemosyne.
+                        Defaults to ~/.mempalace.
         """
         self._config_dir = (
-            Path(config_dir) if config_dir else Path(os.path.expanduser("~/.mnemosyne"))
+            Path(config_dir) if config_dir else Path(os.path.expanduser("~/.mempalace"))
         )
         self._config_file = self._config_dir / "config.json"
         self._people_map_file = self._config_dir / "people_map.json"
@@ -92,7 +92,7 @@ class MnemosyneConfig:
     @property
     def palace_path(self):
         """Path to the memory palace data directory."""
-        env_val = os.environ.get("MNEMOSYNE_PALACE_PATH") or os.environ.get("MNEMOSYNE_PALACE_PATH")
+        env_val = os.environ.get("MEMPALACE_PALACE_PATH") or os.environ.get("MEMPAL_PALACE_PATH")
         if env_val:
             return env_val
         return self._file_config.get("palace_path", DEFAULT_PALACE_PATH)
