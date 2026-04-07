@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/mempalace_logo.png" alt="MemPalace" width="280">
+<img src="assets/mnemosyne_logo.png" alt="Mnemosyne" width="280">
 
-# MemPalace
+# Mnemosyne
 
 ### The highest-scoring AI memory system ever benchmarked. And it's free.
 
@@ -10,15 +10,15 @@
 
 Every conversation you have with an AI — every decision, every debugging session, every architecture debate — disappears when the session ends. Six months of work, gone. You start over every time.
 
-Other memory systems try to fix this by letting AI decide what's worth remembering. It extracts "user prefers Postgres" and throws away the conversation where you explained *why*. MemPalace takes a different approach: **store everything, then make it findable.**
+Other memory systems try to fix this by letting AI decide what's worth remembering. It extracts "user prefers Postgres" and throws away the conversation where you explained *why*. Mnemosyne takes a different approach: **store everything, then make it findable.**
 
-**The Palace** — Ancient Greek orators memorized entire speeches by placing ideas in rooms of an imaginary building. Walk through the building, find the idea. MemPalace applies the same principle to AI memory: your conversations are organized into wings (people and projects), halls (types of memory), and rooms (specific ideas). No AI decides what matters — you keep every word, and the structure gives you a navigable map instead of a flat search index.
+**The Palace** — Ancient Greek orators memorized entire speeches by placing ideas in rooms of an imaginary building. Walk through the building, find the idea. Mnemosyne applies the same principle to AI memory: your conversations are organized into wings (people and projects), halls (types of memory), and rooms (specific ideas). No AI decides what matters — you keep every word, and the structure gives you a navigable map instead of a flat search index.
 
-**Raw verbatim storage** — MemPalace stores your actual exchanges in ChromaDB without summarization or extraction. The 96.6% LongMemEval result comes from this raw mode. We don't burn an LLM to decide what's "worth remembering" — we keep everything and let semantic search find it.
+**Raw verbatim storage** — Mnemosyne stores your actual exchanges in ChromaDB without summarization or extraction. The 96.6% LongMemEval result comes from this raw mode. We don't burn an LLM to decide what's "worth remembering" — we keep everything and let semantic search find it.
 
 **AAAK (experimental)** — A lossy abbreviation dialect for packing repeated entities into fewer tokens at scale. Readable by any LLM that reads text — Claude, GPT, Gemini, Llama, Mistral — no decoder needed. **AAAK is a separate compression layer, not the storage default**, and on the LongMemEval benchmark it currently regresses vs raw mode (84.2% vs 96.6%). We're iterating. See the [note above](#a-note-from-milla--ben--april-7-2026) for the honest status.
 
-**Local, open, adaptable** — MemPalace runs entirely on your machine, on any data you have locally, without using any external API or services. It has been tested on conversations — but it can be adapted for different types of datastores. This is why we're open-sourcing it.
+**Local, open, adaptable** — Mnemosyne runs entirely on your machine, on any data you have locally, without using any external API or services. It has been tested on conversations — but it can be adapted for different types of datastores. This is why we're open-sourcing it.
 
 <br>
 
@@ -67,7 +67,7 @@ Other memory systems try to fix this by letting AI decide what's worth rememberi
 >
 > **What's still true and reproducible:**
 >
-> - **96.6% R@5 on LongMemEval in raw mode**, on 500 questions, zero API calls — independently reproduced on M2 Ultra in under 5 minutes by [@gizmax](https://github.com/milla-jovovich/mempalace/issues/39).
+> - **96.6% R@5 on LongMemEval in raw mode**, on 500 questions, zero API calls — independently reproduced on M2 Ultra in under 5 minutes by [@gizmax](https://github.com/beko2210/mnemosyne/issues/39).
 > - Local, free, no subscription, no cloud, no data leaving your machine.
 > - The architecture (wings, rooms, closets, drawers) is real and useful, even if it's not a magical retrieval boost.
 >
@@ -78,7 +78,7 @@ Other memory systems try to fix this by letting AI decide what's worth rememberi
 > 3. Wiring `fact_checker.py` into the KG ops so the contradiction detection claim becomes true
 > 4. Pinning ChromaDB to a tested range (Issue #100), fixing the shell injection in hooks (#110), and addressing the macOS ARM64 segfault (#74)
 >
-> **Thank you to everyone who poked holes in this.** Brutal honest criticism is exactly what makes open source work, and it's what we asked for. Special thanks to [@panuhorsmalahti](https://github.com/milla-jovovich/mempalace/issues/43), [@lhl](https://github.com/milla-jovovich/mempalace/issues/27), [@gizmax](https://github.com/milla-jovovich/mempalace/issues/39), and everyone who filed an issue or a PR in the first 48 hours. We're listening, we're fixing, and we'd rather be right than impressive.
+> **Thank you to everyone who poked holes in this.** Brutal honest criticism is exactly what makes open source work, and it's what we asked for. Special thanks to [@panuhorsmalahti](https://github.com/beko2210/mnemosyne/issues/43), [@lhl](https://github.com/beko2210/mnemosyne/issues/27), [@gizmax](https://github.com/beko2210/mnemosyne/issues/39), and everyone who filed an issue or a PR in the first 48 hours. We're listening, we're fixing, and we'd rather be right than impressive.
 >
 > — *Milla Jovovich & Ben Sigman*
 
@@ -87,21 +87,21 @@ Other memory systems try to fix this by letting AI decide what's worth rememberi
 ## Quick Start
 
 ```bash
-pip install mempalace
+pip install mnemosyne
 
 # Set up your world — who you work with, what your projects are
-mempalace init ~/projects/myapp
+mnemosyne init ~/projects/myapp
 
 # Mine your data
-mempalace mine ~/projects/myapp                    # projects — code, docs, notes
-mempalace mine ~/chats/ --mode convos              # convos — Claude, ChatGPT, Slack exports
-mempalace mine ~/chats/ --mode convos --extract general  # general — classifies into decisions, milestones, problems
+mnemosyne mine ~/projects/myapp                    # projects — code, docs, notes
+mnemosyne mine ~/chats/ --mode convos              # convos — Claude, ChatGPT, Slack exports
+mnemosyne mine ~/chats/ --mode convos --extract general  # general — classifies into decisions, milestones, problems
 
 # Search anything you've ever discussed
-mempalace search "why did we switch to GraphQL"
+mnemosyne search "why did we switch to GraphQL"
 
 # Your AI remembers
-mempalace status
+mnemosyne status
 ```
 
 Three mining modes: **projects** (code and docs), **convos** (conversation exports), and **general** (auto-classifies into decisions, preferences, milestones, problems, and emotional context). Everything stays on your machine.
@@ -110,20 +110,20 @@ Three mining modes: **projects** (code and docs), **convos** (conversation expor
 
 ## How You Actually Use It
 
-After the one-time setup (install → init → mine), you don't run MemPalace commands manually. Your AI uses it for you. There are two ways, depending on which AI you use.
+After the one-time setup (install → init → mine), you don't run Mnemosyne commands manually. Your AI uses it for you. There are two ways, depending on which AI you use.
 
 ### With Claude, ChatGPT, Cursor (MCP-compatible tools)
 
 ```bash
-# Connect MemPalace once
-claude mcp add mempalace -- python -m mempalace.mcp_server
+# Connect Mnemosyne once
+claude mcp add mnemosyne -- python -m mnemosyne.mcp_server
 ```
 
 Now your AI has 19 tools available through MCP. Ask it anything:
 
 > *"What did we decide about auth last month?"*
 
-Claude calls `mempalace_search` automatically, gets verbatim results, and answers you. You never type `mempalace search` again. The AI handles it.
+Claude calls `mnemosyne_search` automatically, gets verbatim results, and answers you. You never type `mnemosyne search` again. The AI handles it.
 
 ### With local models (Llama, Mistral, or any offline LLM)
 
@@ -132,7 +132,7 @@ Local models generally don't speak MCP yet. Two approaches:
 **1. Wake-up command** — load your world into the model's context:
 
 ```bash
-mempalace wake-up > context.txt
+mnemosyne wake-up > context.txt
 # Paste context.txt into your local model's system prompt
 ```
 
@@ -141,15 +141,15 @@ This gives your local model ~170 tokens of critical facts (in AAAK if you prefer
 **2. CLI search** — query on demand, feed results into your prompt:
 
 ```bash
-mempalace search "auth decisions" > results.txt
+mnemosyne search "auth decisions" > results.txt
 # Include results.txt in your prompt
 ```
 
 Or use the Python API:
 
 ```python
-from mempalace.searcher import search_memories
-results = search_memories("auth decisions", palace_path="~/.mempalace/palace")
+from mnemosyne.searcher import search_memories
+results = search_memories("auth decisions", palace_path="~/.mnemosyne/palace")
 # Inject into your local model's context
 ```
 
@@ -167,10 +167,10 @@ Decisions happen in conversations now. Not in docs. Not in Jira. In conversation
 |----------|--------------|-------------|
 | Paste everything | 19.5M — doesn't fit any context window | Impossible |
 | LLM summaries | ~650K | ~$507/yr |
-| **MemPalace wake-up** | **~170 tokens** | **~$0.70/yr** |
-| **MemPalace + 5 searches** | **~13,500 tokens** | **~$10/yr** |
+| **Mnemosyne wake-up** | **~170 tokens** | **~$0.70/yr** |
+| **Mnemosyne + 5 searches** | **~13,500 tokens** | **~$10/yr** |
 
-MemPalace loads 170 tokens of critical facts on wake-up — your team, your projects, your preferences. Then searches only when needed. $10/year to remember everything vs $507/year for summaries that lose context.
+Mnemosyne loads 170 tokens of critical facts on wake-up — your team, your projects, your preferences. Then searches only when needed. $10/year to remember everything vs $507/year for summaries that lose context.
 
 ---
 
@@ -182,9 +182,9 @@ The layout is fairly simple, though it took a long time to get there.
 
 It starts with a **wing**. Every project, person, or topic you're filing gets its own wing in the palace.
 
-Each wing has **rooms** connected to it, where information is divided into subjects that relate to that wing — so every room is a different element of what your project contains. Project ideas could be one room, employees could be another, financial statements another. There can be an endless number of rooms that split the wing into sections. The MemPalace install detects these for you automatically, and of course you can personalize it any way you feel is right.
+Each wing has **rooms** connected to it, where information is divided into subjects that relate to that wing — so every room is a different element of what your project contains. Project ideas could be one room, employees could be another, financial statements another. There can be an endless number of rooms that split the wing into sections. The Mnemosyne install detects these for you automatically, and of course you can personalize it any way you feel is right.
 
-Every room has a **closet** connected to it, and here's where things get interesting. We've developed an AI language called **AAAK**. Don't ask — it's a whole story of its own. Your agent learns the AAAK shorthand every time it wakes up. Because AAAK is essentially English, but a very truncated version, your agent understands how to use it in seconds. It comes as part of the install, built into the MemPalace code. In our next update, we'll add AAAK directly to the closets, which will be a real game changer — the amount of info in the closets will be much bigger, but it will take up far less space and far less reading time for your agent.
+Every room has a **closet** connected to it, and here's where things get interesting. We've developed an AI language called **AAAK**. Don't ask — it's a whole story of its own. Your agent learns the AAAK shorthand every time it wakes up. Because AAAK is essentially English, but a very truncated version, your agent understands how to use it in seconds. It comes as part of the install, built into the Mnemosyne code. In our next update, we'll add AAAK directly to the closets, which will be a real game changer — the amount of info in the closets will be much bigger, but it will take up far less space and far less reading time for your agent.
 
 Inside those closets are **drawers**, and those drawers are where your original files live. In this first version, we haven't used AAAK as a closet tool, but even so, the summaries have shown **96.6% recall** in all the benchmarks we've done across multiple benchmarking platforms. Once the closets use AAAK, searches will be even faster while keeping every word exact. But even now, the closet approach has been a huge boon to how much info is stored in a small space — it's used to easily point your AI agent to the drawer where your original file lives. You never lose anything, and all this happens in seconds.
 
@@ -226,7 +226,7 @@ You say what you're looking for and boom, it already knows which wing to go to. 
 **Rooms** — specific topics within a wing. Auth, billing, deploy — endless rooms.
 **Halls** — connections between related rooms *within* the same wing. If Room A (auth) and Room B (security) are related, a hall links them.
 **Tunnels** — connections *between* wings. When Person A and a Project both have a room about "auth," a tunnel cross-references them automatically.
-**Closets** — summaries that point to the original content. (In v3.0.0 these are plain-text summaries; AAAK-encoded closets are coming in a future update — see [Task #30](https://github.com/milla-jovovich/mempalace/issues/30).)
+**Closets** — summaries that point to the original content. (In v3.0.0 these are plain-text summaries; AAAK-encoded closets are coming in a future update — see [Task #30](https://github.com/beko2210/mnemosyne/issues/30).)
 **Drawers** — the original verbatim files. The exact words, never summarized.
 
 **Halls** are memory types — the same in every wing, acting as corridors:
@@ -280,13 +280,13 @@ AAAK is a lossy abbreviation system — entity codes, structural markers, and se
 - **It does not save tokens at small scales.** Short text already tokenizes efficiently. AAAK overhead (codes, separators) costs more than it saves on a few sentences.
 - **It can save tokens at scale** — in scenarios with many repeated entities (a team mentioned hundreds of times, the same project across thousands of sessions), the entity codes amortize.
 - **AAAK currently regresses LongMemEval** vs raw verbatim retrieval (84.2% R@5 vs 96.6%). The 96.6% headline number is from **raw mode**, not AAAK mode.
-- **The MemPalace storage default is raw verbatim text in ChromaDB** — that's where the benchmark wins come from. AAAK is a separate compression layer for context loading, not the storage format.
+- **The Mnemosyne storage default is raw verbatim text in ChromaDB** — that's where the benchmark wins come from. AAAK is a separate compression layer for context loading, not the storage format.
 
-We're iterating on the dialect spec, adding a real tokenizer for stats, and exploring better break points for when to use it. Track progress in [Issue #43](https://github.com/milla-jovovich/mempalace/issues/43) and [#27](https://github.com/milla-jovovich/mempalace/issues/27).
+We're iterating on the dialect spec, adding a real tokenizer for stats, and exploring better break points for when to use it. Track progress in [Issue #43](https://github.com/beko2210/mnemosyne/issues/43) and [#27](https://github.com/beko2210/mnemosyne/issues/27).
 
 ### Contradiction Detection (experimental, not yet wired into KG)
 
-A separate utility (`fact_checker.py`) can check assertions against entity facts. It's not currently called automatically by the knowledge graph operations — this is being fixed (track in [Issue #27](https://github.com/milla-jovovich/mempalace/issues/27)). When enabled it catches things like:
+A separate utility (`fact_checker.py`) can check assertions against entity facts. It's not currently called automatically by the knowledge graph operations — this is being fixed (track in [Issue #27](https://github.com/beko2210/mnemosyne/issues/27)). When enabled it catches things like:
 
 ```
 Input:  "Soren finished the auth migration"
@@ -309,17 +309,17 @@ Facts checked against the knowledge graph. Ages, dates, and tenures calculated d
 
 ```bash
 # Mine each project's conversations
-mempalace mine ~/chats/orion/  --mode convos --wing orion
-mempalace mine ~/chats/nova/   --mode convos --wing nova
-mempalace mine ~/chats/helios/ --mode convos --wing helios
+mnemosyne mine ~/chats/orion/  --mode convos --wing orion
+mnemosyne mine ~/chats/nova/   --mode convos --wing nova
+mnemosyne mine ~/chats/helios/ --mode convos --wing helios
 
 # Six months later: "why did I use Postgres here?"
-mempalace search "database decision" --wing orion
+mnemosyne search "database decision" --wing orion
 # → "Chose Postgres over SQLite because Orion needs concurrent writes
 #    and the dataset will exceed 10GB. Decided 2025-11-03."
 
 # Cross-project search
-mempalace search "rate limiting approach"
+mnemosyne search "rate limiting approach"
 # → finds your approach in Orion AND Nova, shows the differences
 ```
 
@@ -327,15 +327,15 @@ mempalace search "rate limiting approach"
 
 ```bash
 # Mine Slack exports and AI conversations
-mempalace mine ~/exports/slack/ --mode convos --wing driftwood
-mempalace mine ~/.claude/projects/ --mode convos
+mnemosyne mine ~/exports/slack/ --mode convos --wing driftwood
+mnemosyne mine ~/.claude/projects/ --mode convos
 
 # "What did Soren work on last sprint?"
-mempalace search "Soren sprint" --wing driftwood
+mnemosyne search "Soren sprint" --wing driftwood
 # → 14 closets: OAuth refactor, dark mode, component library migration
 
 # "Who decided to use Clerk?"
-mempalace search "Clerk decision" --wing driftwood
+mnemosyne search "Clerk decision" --wing driftwood
 # → "Kai recommended Clerk over Auth0 — pricing + developer experience.
 #    Team agreed 2026-01-15. Maya handling the migration."
 ```
@@ -345,9 +345,9 @@ mempalace search "Clerk decision" --wing driftwood
 Some transcript exports concatenate multiple sessions into one huge file:
 
 ```bash
-mempalace split ~/chats/                      # split into per-session files
-mempalace split ~/chats/ --dry-run            # preview first
-mempalace split ~/chats/ --min-sessions 3     # only split files with 3+ sessions
+mnemosyne split ~/chats/                      # split into per-session files
+mnemosyne split ~/chats/ --dry-run            # preview first
+mnemosyne split ~/chats/ --min-sessions 3     # only split files with 3+ sessions
 ```
 
 ---
@@ -357,7 +357,7 @@ mempalace split ~/chats/ --min-sessions 3     # only split files with 3+ session
 Temporal entity-relationship triples — like Zep's Graphiti, but SQLite instead of Neo4j. Local and free.
 
 ```python
-from mempalace.knowledge_graph import KnowledgeGraph
+from mnemosyne.knowledge_graph import KnowledgeGraph
 
 kg = KnowledgeGraph()
 kg.add_triple("Kai", "works_on", "Orion", valid_from="2025-06-01")
@@ -385,7 +385,7 @@ kg.invalidate("Kai", "works_on", "Orion", ended="2026-03-01")
 
 Now queries for Kai's current work won't return Orion. Historical queries still will.
 
-| Feature | MemPalace | Zep (Graphiti) |
+| Feature | Mnemosyne | Zep (Graphiti) |
 |---------|-----------|----------------|
 | Storage | SQLite (local) | Neo4j (cloud) |
 | Cost | Free | $25/mo+ |
@@ -400,7 +400,7 @@ Now queries for Kai's current work won't return Orion. Historical queries still 
 Create agents that focus on specific areas. Each agent gets its own wing and diary in the palace — not in your CLAUDE.md. Add 50 agents, your config stays the same size.
 
 ```
-~/.mempalace/agents/
+~/.mnemosyne/agents/
   ├── reviewer.json       # code quality, patterns, bugs
   ├── architect.json      # design decisions, tradeoffs
   └── ops.json            # deploys, incidents, infra
@@ -409,7 +409,7 @@ Create agents that focus on specific areas. Each agent gets its own wing and dia
 Your CLAUDE.md just needs one line:
 
 ```
-You have MemPalace agents. Run mempalace_list_agents to see them.
+You have Mnemosyne agents. Run mnemosyne_list_agents to see them.
 ```
 
 The AI discovers its agents from the palace at runtime. Each agent:
@@ -420,24 +420,24 @@ The AI discovers its agents from the palace at runtime. Each agent:
 
 ```
 # Agent writes to its diary after a code review
-mempalace_diary_write("reviewer",
+mnemosyne_diary_write("reviewer",
     "PR#42|auth.bypass.found|missing.middleware.check|pattern:3rd.time.this.quarter|★★★★")
 
 # Agent reads back its history
-mempalace_diary_read("reviewer", last_n=10)
+mnemosyne_diary_read("reviewer", last_n=10)
 # → last 10 findings, compressed in AAAK
 ```
 
 Each agent is a specialist lens on your data. The reviewer remembers every bug pattern it's seen. The architect remembers every design decision. The ops agent remembers every incident. They don't share a scratchpad — they each maintain their own memory.
 
-Letta charges $20–200/mo for agent-managed memory. MemPalace does it with a wing.
+Letta charges $20–200/mo for agent-managed memory. Mnemosyne does it with a wing.
 
 ---
 
 ## MCP Server
 
 ```bash
-claude mcp add mempalace -- python -m mempalace.mcp_server
+claude mcp add mnemosyne -- python -m mnemosyne.mcp_server
 ```
 
 ### 19 Tools
@@ -446,47 +446,47 @@ claude mcp add mempalace -- python -m mempalace.mcp_server
 
 | Tool | What |
 |------|------|
-| `mempalace_status` | Palace overview + AAAK spec + memory protocol |
-| `mempalace_list_wings` | Wings with counts |
-| `mempalace_list_rooms` | Rooms within a wing |
-| `mempalace_get_taxonomy` | Full wing → room → count tree |
-| `mempalace_search` | Semantic search with wing/room filters |
-| `mempalace_check_duplicate` | Check before filing |
-| `mempalace_get_aaak_spec` | AAAK dialect reference |
+| `mnemosyne_status` | Palace overview + AAAK spec + memory protocol |
+| `mnemosyne_list_wings` | Wings with counts |
+| `mnemosyne_list_rooms` | Rooms within a wing |
+| `mnemosyne_get_taxonomy` | Full wing → room → count tree |
+| `mnemosyne_search` | Semantic search with wing/room filters |
+| `mnemosyne_check_duplicate` | Check before filing |
+| `mnemosyne_get_aaak_spec` | AAAK dialect reference |
 
 **Palace (write)**
 
 | Tool | What |
 |------|------|
-| `mempalace_add_drawer` | File verbatim content |
-| `mempalace_delete_drawer` | Remove by ID |
+| `mnemosyne_add_drawer` | File verbatim content |
+| `mnemosyne_delete_drawer` | Remove by ID |
 
 **Knowledge Graph**
 
 | Tool | What |
 |------|------|
-| `mempalace_kg_query` | Entity relationships with time filtering |
-| `mempalace_kg_add` | Add facts |
-| `mempalace_kg_invalidate` | Mark facts as ended |
-| `mempalace_kg_timeline` | Chronological entity story |
-| `mempalace_kg_stats` | Graph overview |
+| `mnemosyne_kg_query` | Entity relationships with time filtering |
+| `mnemosyne_kg_add` | Add facts |
+| `mnemosyne_kg_invalidate` | Mark facts as ended |
+| `mnemosyne_kg_timeline` | Chronological entity story |
+| `mnemosyne_kg_stats` | Graph overview |
 
 **Navigation**
 
 | Tool | What |
 |------|------|
-| `mempalace_traverse` | Walk the graph from a room across wings |
-| `mempalace_find_tunnels` | Find rooms bridging two wings |
-| `mempalace_graph_stats` | Graph connectivity overview |
+| `mnemosyne_traverse` | Walk the graph from a room across wings |
+| `mnemosyne_find_tunnels` | Find rooms bridging two wings |
+| `mnemosyne_graph_stats` | Graph connectivity overview |
 
 **Agent Diary**
 
 | Tool | What |
 |------|------|
-| `mempalace_diary_write` | Write AAAK diary entry |
-| `mempalace_diary_read` | Read recent diary entries |
+| `mnemosyne_diary_write` | Write AAAK diary entry |
+| `mnemosyne_diary_read` | Read recent diary entries |
 
-The AI learns AAAK and the memory protocol automatically from the `mempalace_status` response. No manual configuration.
+The AI learns AAAK and the memory protocol automatically from the `mnemosyne_status` response. No manual configuration.
 
 ---
 
@@ -501,8 +501,8 @@ Two hooks for Claude Code that automatically save memories during work:
 ```json
 {
   "hooks": {
-    "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "/path/to/mempalace/hooks/mempal_save_hook.sh"}]}],
-    "PreCompact": [{"matcher": "", "hooks": [{"type": "command", "command": "/path/to/mempalace/hooks/mempal_precompact_hook.sh"}]}]
+    "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "/path/to/mnemosyne/hooks/mempal_save_hook.sh"}]}],
+    "PreCompact": [{"matcher": "", "hooks": [{"type": "command", "command": "/path/to/mnemosyne/hooks/mempal_precompact_hook.sh"}]}]
   }
 }
 ```
@@ -527,9 +527,9 @@ The 96.6% raw score is the highest published LongMemEval result requiring no API
 
 | System | LongMemEval R@5 | API Required | Cost |
 |--------|----------------|--------------|------|
-| **MemPalace (hybrid)** | **100%** | Optional | Free |
+| **Mnemosyne (hybrid)** | **100%** | Optional | Free |
 | Supermemory ASMR | ~99% | Yes | — |
-| **MemPalace (raw)** | **96.6%** | **None** | **Free** |
+| **Mnemosyne (raw)** | **96.6%** | **None** | **Free** |
 | Mastra | 94.87% | Yes (GPT) | API costs |
 | Mem0 | ~85% | Yes | $19–249/mo |
 | Zep | ~85% | Yes | $25/mo+ |
@@ -540,31 +540,31 @@ The 96.6% raw score is the highest published LongMemEval result requiring no API
 
 ```bash
 # Setup
-mempalace init <dir>                              # guided onboarding + AAAK bootstrap
+mnemosyne init <dir>                              # guided onboarding + AAAK bootstrap
 
 # Mining
-mempalace mine <dir>                              # mine project files
-mempalace mine <dir> --mode convos                # mine conversation exports
-mempalace mine <dir> --mode convos --wing myapp   # tag with a wing name
+mnemosyne mine <dir>                              # mine project files
+mnemosyne mine <dir> --mode convos                # mine conversation exports
+mnemosyne mine <dir> --mode convos --wing myapp   # tag with a wing name
 
 # Splitting
-mempalace split <dir>                             # split concatenated transcripts
-mempalace split <dir> --dry-run                   # preview
+mnemosyne split <dir>                             # split concatenated transcripts
+mnemosyne split <dir> --dry-run                   # preview
 
 # Search
-mempalace search "query"                          # search everything
-mempalace search "query" --wing myapp             # within a wing
-mempalace search "query" --room auth-migration    # within a room
+mnemosyne search "query"                          # search everything
+mnemosyne search "query" --wing myapp             # within a wing
+mnemosyne search "query" --room auth-migration    # within a room
 
 # Memory stack
-mempalace wake-up                                 # load L0 + L1 context
-mempalace wake-up --wing driftwood                # project-specific
+mnemosyne wake-up                                 # load L0 + L1 context
+mnemosyne wake-up --wing driftwood                # project-specific
 
 # Compression
-mempalace compress --wing myapp                   # AAAK compress
+mnemosyne compress --wing myapp                   # AAAK compress
 
 # Status
-mempalace status                                  # palace overview
+mnemosyne status                                  # palace overview
 ```
 
 All commands accept `--palace <path>` to override the default location.
@@ -573,19 +573,19 @@ All commands accept `--palace <path>` to override the default location.
 
 ## Configuration
 
-### Global (`~/.mempalace/config.json`)
+### Global (`~/.mnemosyne/config.json`)
 
 ```json
 {
   "palace_path": "/custom/path/to/palace",
-  "collection_name": "mempalace_drawers",
+  "collection_name": "mnemosyne_drawers",
   "people_map": {"Kai": "KAI", "Priya": "PRI"}
 }
 ```
 
-### Wing config (`~/.mempalace/wing_config.json`)
+### Wing config (`~/.mnemosyne/wing_config.json`)
 
-Generated by `mempalace init`. Maps your people and projects to wings:
+Generated by `mnemosyne init`. Maps your people and projects to wings:
 
 ```json
 {
@@ -597,7 +597,7 @@ Generated by `mempalace init`. Maps your people and projects to wings:
 }
 ```
 
-### Identity (`~/.mempalace/identity.txt`)
+### Identity (`~/.mnemosyne/identity.txt`)
 
 Plain text. Becomes Layer 0 — loaded every session.
 
@@ -630,9 +630,9 @@ Plain text. Becomes Layer 0 — loaded every session.
 ## Project Structure
 
 ```
-mempalace/
+mnemosyne/
 ├── README.md                  ← you are here
-├── mempalace/                 ← core package (README)
+├── mnemosyne/                 ← core package (README)
 │   ├── cli.py                 ← CLI entry point
 │   ├── mcp_server.py          ← MCP server (19 tools)
 │   ├── knowledge_graph.py     ← temporal entity graph
@@ -642,7 +642,7 @@ mempalace/
 │   ├── convo_miner.py         ← conversation ingest
 │   ├── searcher.py            ← semantic search
 │   ├── onboarding.py          ← guided setup
-│   └── ...                    ← see mempalace/README.md
+│   └── ...                    ← see mnemosyne/README.md
 ├── benchmarks/                ← reproducible benchmark runners
 │   ├── README.md              ← reproduction guide
 │   ├── BENCHMARKS.md          ← full results + methodology
@@ -673,7 +673,7 @@ mempalace/
 No API key. No internet after install. Everything local.
 
 ```bash
-pip install mempalace
+pip install mnemosyne
 ```
 
 ---
@@ -688,10 +688,10 @@ MIT — see [LICENSE](LICENSE).
 
 <!-- Link Definitions -->
 [version-shield]: https://img.shields.io/badge/version-3.0.0-4dc9f6?style=flat-square&labelColor=0a0e14
-[release-link]: https://github.com/milla-jovovich/mempalace/releases
+[release-link]: https://github.com/beko2210/mnemosyne/releases
 [python-shield]: https://img.shields.io/badge/python-3.9+-7dd8f8?style=flat-square&labelColor=0a0e14&logo=python&logoColor=7dd8f8
 [python-link]: https://www.python.org/
 [license-shield]: https://img.shields.io/badge/license-MIT-b0e8ff?style=flat-square&labelColor=0a0e14
-[license-link]: https://github.com/milla-jovovich/mempalace/blob/main/LICENSE
+[license-link]: https://github.com/beko2210/mnemosyne/blob/main/LICENSE
 [discord-shield]: https://img.shields.io/badge/discord-join-5865F2?style=flat-square&labelColor=0a0e14&logo=discord&logoColor=5865F2
 [discord-link]: https://discord.com/invite/ycTQQCu6kn
