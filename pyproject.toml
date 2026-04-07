@@ -3,7 +3,7 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mempalace"
+name = "mnemosyne"
 version = "3.0.0"
 description = "Give your AI a memory — mine projects and conversations into a searchable palace. No API key required."
 readme = "README.md"
@@ -34,15 +34,15 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/milla-jovovich/mempalace"
-Repository = "https://github.com/milla-jovovich/mempalace"
-"Bug Tracker" = "https://github.com/milla-jovovich/mempalace/issues"
+Homepage = "https://github.com/beko2210/mnemosyne"
+Repository = "https://github.com/beko2210/mnemosyne"
+"Bug Tracker" = "https://github.com/beko2210/mnemosyne/issues"
 
 [tool.setuptools.packages.find]
-include = ["mempalace*"]
+include = ["mnemosyne*"]
 
 [project.scripts]
-mempalace = "mempalace:main"
+mnemosyne = "mnemosyne:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "build>=1.0", "twine>=4.0"]
