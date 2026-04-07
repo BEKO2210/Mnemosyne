@@ -105,43 +105,110 @@ def _mrr(relevant_positions):
 
 
 def _generate_memory_corpus(n_items=200):
-    """Generate a synthetic corpus with known ground truth for retrieval testing."""
-    topics = [
-        ("auth", "Authentication and authorization decisions, JWT tokens, OAuth2 flows"),
-        ("database", "PostgreSQL setup, migration strategies, indexing decisions"),
-        ("frontend", "React component architecture, state management, UI patterns"),
-        ("devops", "CI/CD pipeline, Docker containers, Kubernetes deployment"),
-        ("family", "Family events, children's activities, school, sports"),
-        ("project", "Project planning, milestones, sprint reviews, retrospectives"),
-        ("meeting", "Team meetings, standup notes, decision outcomes"),
-        ("research", "AI research papers, model comparisons, benchmark results"),
-    ]
+    """
+    Generate realistic conversation fragments with INDIRECT queries.
+
+    v2: Queries do NOT contain the topic keyword. This forces ChromaDB to
+    use real semantic understanding, not keyword matching.
+    """
+    # Each topic has varied natural language fragments (no topic label embedded)
+    fragments = {
+        "auth": [
+            "We went with PKCE flow for the mobile app because implicit grant is deprecated. Tokens expire in 15 minutes, refresh tokens go into the secure keychain.",
+            "Keycloak was chosen over Auth0 — the pricing was a dealbreaker at our scale. Self-hosted on the k8s cluster gives us full control.",
+            "The token refresh race condition on iOS was nasty. Fixed it with a mutex lock around the refresh call. Cost us two days of debugging.",
+            "User session management needs a rethink. Current approach: JWTs for stateless auth, Redis for active session tracking, 30-day sliding window.",
+            "SSO integration with the enterprise client is done. SAML 2.0, their IdP talks to our Keycloak. Took a week longer than estimated.",
+        ],
+        "database": [
+            "Postgres won over SQLite because we need concurrent writes. The dataset will hit 10GB in six months, and SQLite locks the whole file on writes.",
+            "Added pgBouncer for connection pooling — max 100 connections. Without it we were exhausting the pool during peak hours.",
+            "TimescaleDB extension is live. Hypertables for sensor data, 90-day raw retention, 1-year for aggregates. Compression ratio is 95%.",
+            "The N+1 query in user-service caused a 3-second response time. DataLoader pattern fixed it — p50 dropped from 800ms to 12ms.",
+            "Migration strategy: Flyway for schema versioning. Every migration is idempotent. Rollback scripts mandatory for anything touching production.",
+        ],
+        "frontend": [
+            "React 19 with Server Components is the plan. Reduces client bundle by 40%. The team needs a week to learn the new patterns.",
+            "State management: Zustand over Redux. The boilerplate reduction is massive and the devtools are good enough now.",
+            "The design system uses Radix primitives with Tailwind. Every component has a11y baked in. Storybook for documentation.",
+            "Performance budget: First Contentful Paint under 1.5 seconds. Currently at 2.1s — the main bottleneck is the analytics bundle.",
+            "Dark mode implementation: CSS custom properties with a context provider. Follows system preference by default, user can override.",
+        ],
+        "devops": [
+            "Migrated CI from Jenkins to GitHub Actions. Build time dropped from 12 minutes to 4 minutes. Matrix builds for Node 18 and 20.",
+            "Docker multi-stage builds reduced the image from 1.2GB to 180MB. Alpine base, only production dependencies in the final stage.",
+            "Kubernetes deployment: 3 replicas, horizontal pod autoscaler kicks in at 70% CPU. Rolling updates with zero downtime.",
+            "Terraform manages all infrastructure. State stored in S3 with DynamoDB locking. Drift detection runs weekly.",
+            "Monitoring stack: Prometheus for metrics, Grafana for dashboards, PagerDuty for alerts. SLA: p99 response time under 200ms.",
+        ],
+        "family": [
+            "Riley is stressed about her college entrance exams next month. Her English scores are excellent but she is struggling with calculus.",
+            "Max won the regional chess tournament on Saturday. He beat a player rated 300 points higher in the final round. The whole family celebrated.",
+            "Portugal trip in August — budget is 4000 EUR. Jordan wants Lisbon, the kids want the Algarve caves. Need to book flights by end of April.",
+            "Parent-teacher conference for Max went well. His teachers say he is exceptionally focused but could participate more in group activities.",
+            "Alice and Jordan are considering renovating the kitchen. Got three quotes — ranging from 8000 to 15000 EUR. Decision by end of month.",
+        ],
+    }
+
+    # Queries use DIFFERENT words than the content (semantic, not keyword)
+    query_map = {
+        "auth": [
+            ("How do we handle user login on mobile?", "auth"),
+            ("What identity provider are we using and why?", "auth"),
+            ("Were there any security bugs in token handling?", "auth"),
+        ],
+        "database": [
+            ("Why did we pick that specific relational database?", "database"),
+            ("How are we handling time-series data at scale?", "database"),
+            ("What caused the API slowdown and how was it resolved?", "database"),
+        ],
+        "frontend": [
+            ("What is our component library built on?", "frontend"),
+            ("How fast does the page load?", "frontend"),
+            ("What framework are we using for the UI?", "frontend"),
+        ],
+        "devops": [
+            ("How long does our build pipeline take?", "devops"),
+            ("How is our application containerized?", "devops"),
+            ("What happens when the servers are under heavy load?", "devops"),
+        ],
+        "family": [
+            ("How are the children doing in school?", "family"),
+            ("Where are we going on holiday this summer?", "family"),
+            ("What home improvement projects are being discussed?", "family"),
+        ],
+    }
 
     corpus = []
+    topic_names = list(fragments.keys())
+    idx = 0
     for i in range(n_items):
-        topic_idx = i % len(topics)
-        topic_name, topic_desc = topics[topic_idx]
-        content = f"[{topic_name}] Item {i}: {topic_desc}. "
-        content += f"Detail {i}: specific information about {topic_name} decision #{i}. "
-        content += f"Context: discussed on day {i % 30 + 1} of the project."
+        topic = topic_names[i % len(topic_names)]
+        frag_list = fragments[topic]
+        content = frag_list[i % len(frag_list)]
+        # Add variation to prevent exact duplicates
+        if i >= len(topic_names):
+            content += f" (Sprint {i // 10}, day {i % 30 + 1})"
 
         corpus.append({
-            "id": f"drawer_{topic_name}_{i}",
+            "id": f"drawer_{idx}",
             "content": content,
-            "wing": f"wing_{topic_name}",
-            "room": f"room_{topic_name}_{i % 5}",
-            "topic": topic_name,
+            "wing": f"wing_{topic}",
+            "room": f"room_{topic}_{i % 3}",
+            "topic": topic,
             "filed_at": (datetime.now() - timedelta(days=n_items - i)).isoformat(),
         })
+        idx += 1
 
     queries = []
-    for topic_name, topic_desc in topics:
-        relevant_ids = [c["id"] for c in corpus if c["topic"] == topic_name]
-        queries.append({
-            "query": f"What were the {topic_name} decisions?",
-            "relevant_ids": relevant_ids,
-            "topic": topic_name,
-        })
+    for topic, qlist in query_map.items():
+        relevant_ids = [c["id"] for c in corpus if c["topic"] == topic]
+        for query_text, _ in qlist:
+            queries.append({
+                "query": query_text,
+                "relevant_ids": relevant_ids,
+                "topic": topic,
+            })
 
     return corpus, queries
 
