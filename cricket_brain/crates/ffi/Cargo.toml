@@ -1,0 +1,22 @@
+[package]
+name = "cricket-brain-ffi"
+version = "3.0.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+description = "C-compatible FFI bridge for cricket-brain"
+documentation = "https://docs.rs/cricket-brain-ffi"
+repository = "https://github.com/BEKO2210/cricket-brain"
+keywords = ["ffi", "c", "jni", "swift", "neuromorphic"]
+categories = ["api-bindings", "science", "algorithms"]
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+cricket-brain = { version = "3.0.0", path = "../.." }
+
+[dev-dependencies]
+cricket-brain = { version = "3.0.0", path = "../.." }
+
+[build-dependencies]
+cbindgen = "0.28"

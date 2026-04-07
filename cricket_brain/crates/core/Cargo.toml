@@ -1,0 +1,15 @@
+[package]
+name = "cricket-brain-core"
+version = "3.0.0"
+edition = "2021"
+rust-version = "1.75"
+license = "AGPL-3.0-only"
+description = "no_std core primitives for cricket-brain: neuron/synapse, telemetry, and error types"
+documentation = "https://docs.rs/cricket-brain-core"
+readme = "../../README.md"
+repository = "https://github.com/BEKO2210/cricket-brain"
+keywords = ["neuromorphic", "no-std", "embedded", "signal-processing"]
+categories = ["science", "algorithms", "embedded", "no-std"]
+
+[dependencies]
+libm = "0.2"

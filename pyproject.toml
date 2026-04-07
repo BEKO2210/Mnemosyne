@@ -3,9 +3,9 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mempalace"
-version = "3.0.0"
-description = "Give your AI a memory — mine projects and conversations into a searchable palace. No API key required."
+name = "mnemosyne"
+version = "4.0.0"
+description = "Unified AI knowledge system — memory palace, graph intelligence, and neuromorphic signal processing in one tool."
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
@@ -15,6 +15,8 @@ authors = [
 keywords = [
     "ai", "memory", "llm", "rag", "chromadb", "mcp",
     "vector-database", "claude", "chatgpt", "embeddings",
+    "knowledge-graph", "pagerank", "neuromorphic", "obsidian",
+    "total-recall", "unified-knowledge",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -34,15 +36,16 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/milla-jovovich/mempalace"
-Repository = "https://github.com/milla-jovovich/mempalace"
-"Bug Tracker" = "https://github.com/milla-jovovich/mempalace/issues"
+Homepage = "https://github.com/beko2210/Mnemosyne"
+Repository = "https://github.com/beko2210/Mnemosyne"
+"Bug Tracker" = "https://github.com/beko2210/Mnemosyne/issues"
 
 [tool.setuptools.packages.find]
-include = ["mempalace*"]
+include = ["mempalace*", "firstbrain*"]
 
 [project.scripts]
 mempalace = "mempalace:main"
+mnemosyne = "mempalace:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "build>=1.0", "twine>=4.0"]

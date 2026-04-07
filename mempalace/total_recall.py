@@ -197,8 +197,9 @@ class MnemosyneAdapter(SourceAdapter):
 
 class FirstbrainAdapter(SourceAdapter):
     """
-    Searches an Obsidian vault on the filesystem.
-    Reads markdown files, scores by backlink count (poor-man's PageRank).
+    Searches an Obsidian vault using the integrated Firstbrain graph engine.
+    Uses real PageRank (not backlink count approximation), tag clustering,
+    and structural similarity for scoring.
 
     Enable by setting FIRSTBRAIN_VAULT_PATH env var or passing vault_path.
     """
@@ -207,6 +208,15 @@ class FirstbrainAdapter(SourceAdapter):
 
     def __init__(self, vault_path: str = None):
         self._vault_path = vault_path or os.environ.get("FIRSTBRAIN_VAULT_PATH", "")
+        self._graph = None
+
+    def _get_graph(self):
+        """Lazy-load the vault graph."""
+        if self._graph is None and self.available():
+            from firstbrain.graph import VaultGraph
+            self._graph = VaultGraph(self._vault_path)
+            self._graph.build()
+        return self._graph
 
     def available(self) -> bool:
         if not self._vault_path:
@@ -223,9 +233,13 @@ class FirstbrainAdapter(SourceAdapter):
         if not md_files:
             return []
 
-        # Build backlink index for PageRank approximation
-        backlink_counts = _count_backlinks(md_files)
-        max_backlinks = max(backlink_counts.values()) if backlink_counts else 1
+        # Build graph for real PageRank
+        graph = self._get_graph()
+        pr_scores = {}
+        if graph:
+            for entry in graph.pagerank(top_n=9999):
+                pr_scores[entry["name"]] = entry["score"]
+        max_pr = max(pr_scores.values()) if pr_scores else 1.0
 
         # Simple keyword search (no embedding needed)
         query_terms = set(query.lower().split())
@@ -247,9 +261,9 @@ class FirstbrainAdapter(SourceAdapter):
             rel_path = md_file.relative_to(vault)
             fname = md_file.stem
 
-            # PageRank approximation from backlink count
-            bl = backlink_counts.get(fname, 0)
-            pagerank = bl / max_backlinks if max_backlinks > 0 else 0
+            # Real PageRank score
+            pr = pr_scores.get(fname, 0.0)
+            pagerank = pr / max_pr if max_pr > 0 else 0
 
             # Recency from file modification time
             mtime = md_file.stat().st_mtime
@@ -267,7 +281,7 @@ class FirstbrainAdapter(SourceAdapter):
                 recency=recency,
                 metadata={
                     "file": str(rel_path),
-                    "backlinks": bl,
+                    "pagerank_raw": round(pr, 6),
                     "modified": datetime.fromtimestamp(mtime).isoformat(),
                 },
             ))
@@ -276,12 +290,48 @@ class FirstbrainAdapter(SourceAdapter):
         scored.sort(key=lambda h: h.similarity, reverse=True)
         return scored[:limit]
 
+    def graph_stats(self) -> dict:
+        """Return full graph analysis stats."""
+        graph = self._get_graph()
+        if not graph:
+            return {"error": "Vault not available"}
+        return graph.stats()
+
+    def graph_pagerank(self, top_n: int = 20) -> list:
+        """Return PageRank scores for top notes."""
+        graph = self._get_graph()
+        if not graph:
+            return []
+        return graph.pagerank(top_n=top_n)
+
+    def graph_clusters(self) -> list:
+        """Return tag-based topic clusters."""
+        graph = self._get_graph()
+        if not graph:
+            return []
+        return graph.tag_clusters()
+
+    def graph_path(self, source: str, target: str) -> dict:
+        """Find shortest path between two notes."""
+        graph = self._get_graph()
+        if not graph:
+            return {"error": "Vault not available"}
+        return graph.shortest_path(source, target)
+
+    def graph_bridges(self) -> list:
+        """Find critical hub notes."""
+        graph = self._get_graph()
+        if not graph:
+            return []
+        return graph.bridge_notes()
+
     def status(self) -> dict:
         info = {"name": self.name, "available": self.available()}
         if self.available():
-            vault = Path(self._vault_path)
             info["vault_path"] = self._vault_path
-            info["notes"] = len(list(vault.rglob("*.md")))
+            graph = self._get_graph()
+            if graph:
+                info.update(graph.stats())
         return info
 
 
@@ -304,10 +354,12 @@ class CricketAdapter(SourceAdapter):
         self._engine = None
 
     def available(self) -> bool:
-        # Check for cricket_brain Python bindings
+        # Check for compiled cricket_brain Python bindings (not just source directory)
         try:
-            import cricket_brain  # noqa: F401
-            return True
+            import cricket_brain
+            # Must have the compiled Brain class, not just the source __init__.py
+            if hasattr(cricket_brain, "Brain"):
+                return True
         except ImportError:
             pass
         # Check for engine binary
