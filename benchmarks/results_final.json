@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-04-07T23:23:44.063697",
+  "seed": 42,
+  "limit": 200,
+  "total_time_s": 37.8068,
+  "python_version": "3.11.15 (main, Mar  3 2026, 09:26:23) [GCC 13.3.0]",
+  "suites": {
+    "memory": {
+      "suite": "memory_retrieval",
+      "corpus_size": 800,
+      "n_queries": 15,
+      "recall_at_5": {
+        "mean": 0.5467,
+        "ci_lo": 0.28,
+        "ci_hi": 0.8
+      },
+      "recall_at_10": {
+        "mean": 0.54,
+        "ci_lo": 0.28,
+        "ci_hi": 0.8
+      },
+      "ndcg_at_10": {
+        "mean": 0.5667,
+        "ci_lo": 0.3333,
+        "ci_hi": 0.8
+      },
+      "mrr": {
+        "mean": 0.5556,
+        "ci_lo": 0.3111,
+        "ci_hi": 0.8
+      },
+      "avg_latency_ms": 29.6,
+      "ingest_time_s": 20.1647
+    },
+    "graph": {
+      "suite": "knowledge_graph",
+      "triples": 1000,
+      "entities": 200,
+      "insert_rate_per_s": 544,
+      "entity_query_ms": 0.12,
+      "temporal_query_ms": 0.14,
+      "timeline_ms": 0.7,
+      "invalidation_ms": 1.6
+    },
+    "intelligence": {
+      "suite": "graph_intelligence",
+      "nodes": 200,
+      "edges": 800,
+      "build_time_ms": 7.6,
+      "pagerank_ms": 6.8,
+      "pagerank_converged": true,
+      "clusters": 8,
+      "cluster_coverage": 1.0,
+      "path_finding_ms": 0.02,
+      "path_success_rate": 1.0,
+      "bridge_detection_ms": 0.8,
+      "bridges_found": 0,
+      "similarity_ms": 0.26,
+      "multihop_ms": 0.1
+    },
+    "signal": {
+      "suite": "signal_processing",
+      "available": true,
+      "steps": 200,
+      "ns_per_step_single": 0.0,
+      "ns_per_step_batch": 0.0,
+      "spike_rate": 0.0,
+      "total_ms_single": 0.0,
+      "total_ms_batch": 0.0
+    },
+    "fusion": {
+      "suite": "total_recall_fusion",
+      "sources_available": [
+        "firstbrain",
+        "cricket"
+      ],
+      "avg_search_ms": 40.75,
+      "avg_hits": 1.0,
+      "degradation": {
+        "full": 1,
+        "mnemosyne_only": 0,
+        "firstbrain_only": 1
+      }
+    }
+  }
+}
