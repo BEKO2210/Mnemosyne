@@ -29,8 +29,10 @@ from .palace_graph import traverse, find_tunnels, graph_stats
 import chromadb
 
 from .knowledge_graph import KnowledgeGraph
+from .total_recall import TotalRecall
 
 _kg = KnowledgeGraph()
+_total_recall = TotalRecall()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
 logger = logging.getLogger("mempalace_mcp")
@@ -436,6 +438,42 @@ def tool_diary_read(agent_name: str, last_n: int = 10):
         return {"error": str(e)}
 
 
+# ==================== TOTAL RECALL ====================
+
+
+def tool_total_recall_search(
+    query: str, limit: int = 10, sources: str = None,
+    wing: str = None, room: str = None, include_kg: bool = True,
+):
+    """Unified search across Mnemosyne + Firstbrain + Cricket-Brain."""
+    source_list = sources.split(",") if sources else None
+    return _total_recall.search(
+        query, limit=limit, sources=source_list,
+        wing=wing, room=room, include_kg=include_kg,
+    )
+
+
+def tool_total_recall_status():
+    """Show which sources are connected and their status."""
+    return _total_recall.status()
+
+
+def tool_total_recall_configure(
+    similarity_weight: float = None,
+    pagerank_weight: float = None,
+    recency_weight: float = None,
+):
+    """Adjust scoring weights for result fusion."""
+    kwargs = {}
+    if similarity_weight is not None:
+        kwargs["similarity_weight"] = similarity_weight
+    if pagerank_weight is not None:
+        kwargs["pagerank_weight"] = pagerank_weight
+    if recency_weight is not None:
+        kwargs["recency_weight"] = recency_weight
+    return _total_recall.configure(**kwargs)
+
+
 # ==================== MCP PROTOCOL ====================
 
 TOOLS = {
@@ -684,6 +722,67 @@ TOOLS = {
             "required": ["agent_name"],
         },
         "handler": tool_diary_read,
+    },
+    # ── Total Recall ─────────────────────────────────────────────────────
+    "total_recall_search": {
+        "description": "Unified search across ALL knowledge sources: Mnemosyne (AI memory), Firstbrain (Obsidian vault), and Cricket-Brain (signal patterns). One query searches everything. Results are fused by semantic similarity + PageRank importance + temporal recency. Use this instead of mempalace_search when you want the broadest possible answer.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "What to search for — searched across all connected sources",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max total results across all sources (default: 10)",
+                },
+                "sources": {
+                    "type": "string",
+                    "description": "Comma-separated source filter: 'mnemosyne,firstbrain,cricket' (default: all available)",
+                },
+                "wing": {
+                    "type": "string",
+                    "description": "Filter Mnemosyne results by wing (optional)",
+                },
+                "room": {
+                    "type": "string",
+                    "description": "Filter Mnemosyne results by room (optional)",
+                },
+                "include_kg": {
+                    "type": "boolean",
+                    "description": "Also search Knowledge Graph for entity matches (default: true)",
+                },
+            },
+            "required": ["query"],
+        },
+        "handler": tool_total_recall_search,
+    },
+    "total_recall_status": {
+        "description": "Show which knowledge sources are connected to Total Recall and their status. Shows Mnemosyne (always), Firstbrain (if FIRSTBRAIN_VAULT_PATH is set), and Cricket-Brain (if installed).",
+        "input_schema": {"type": "object", "properties": {}},
+        "handler": tool_total_recall_status,
+    },
+    "total_recall_configure": {
+        "description": "Adjust how Total Recall ranks results. Change the weights for semantic similarity, PageRank importance, and temporal recency. Weights should sum to ~1.0.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "similarity_weight": {
+                    "type": "number",
+                    "description": "Weight for semantic similarity (default: 0.5)",
+                },
+                "pagerank_weight": {
+                    "type": "number",
+                    "description": "Weight for PageRank/importance (default: 0.3)",
+                },
+                "recency_weight": {
+                    "type": "number",
+                    "description": "Weight for temporal freshness (default: 0.2)",
+                },
+            },
+        },
+        "handler": tool_total_recall_configure,
     },
 }
 
