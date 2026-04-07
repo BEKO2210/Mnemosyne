@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 540">
+  <defs>
+    <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="100%" style="stop-color:#151b23"/>
+    </linearGradient>
+    <filter id="gl">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="gl2">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <circle id="dot-exc" r="3.5" fill="#3fb950"/>
+    <circle id="dot-inh" r="3.5" fill="#f85149"/>
+  </defs>
+
+  <!-- Background -->
+  <rect width="760" height="540" fill="url(#bgG)" rx="10"/>
+
+  <!-- Subtle grid -->
+  <g stroke="#21262d" stroke-width="0.4" opacity="0.35">
+    <line x1="0" y1="100" x2="760" y2="100"/>
+    <line x1="0" y1="210" x2="760" y2="210"/>
+    <line x1="0" y1="320" x2="760" y2="320"/>
+    <line x1="190" y1="0" x2="190" y2="420"/>
+    <line x1="380" y1="0" x2="380" y2="420"/>
+    <line x1="570" y1="0" x2="570" y2="420"/>
+  </g>
+
+  <!-- ==================== LEGEND (top-left) ==================== -->
+  <g transform="translate(24, 22)" font-family="'SF Mono','Fira Code',monospace" font-size="9">
+    <line x1="0" y1="0" x2="22" y2="0" stroke="#3fb950" stroke-width="2.5" stroke-dasharray="6,3"/>
+    <text x="28" y="3.5" fill="#7d8590">Excitatory</text>
+    <line x1="110" y1="0" x2="132" y2="0" stroke="#f85149" stroke-width="2" stroke-dasharray="4,4"/>
+    <text x="138" y="3.5" fill="#7d8590">Inhibitory</text>
+    <circle cx="220" cy="0" r="3.5" fill="#58a6ff"/>
+    <text x="228" y="3.5" fill="#7d8590">Signal flow</text>
+  </g>
+
+  <!-- ==================== INPUT SIGNAL (left) ==================== -->
+  <!-- Position: centered at y=210, x=30..105 -->
+  <g transform="translate(30, 178)">
+    <rect x="0" y="0" width="75" height="56" rx="7" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="37" y="17" font-family="'SF Mono',monospace" font-size="10" fill="#8b949e" text-anchor="middle" font-weight="600">INPUT</text>
+    <!-- Animated sine wave -->
+    <path d="M 8,38 Q 17,22 26,38 T 44,38 T 62,38" stroke="#58a6ff" stroke-width="1.8" fill="none" opacity="0.9">
+      <animate attributeName="d" dur="0.8s" repeatCount="indefinite"
+        values="M 8,38 Q 17,22 26,38 T 44,38 T 62,38;
+                M 8,38 Q 17,54 26,38 T 44,38 T 62,38;
+                M 8,38 Q 17,22 26,38 T 44,38 T 62,38"/>
+    </path>
+  </g>
+  <text x="67" y="250" font-family="'SF Mono',monospace" font-size="10" fill="#58a6ff" text-anchor="middle" font-weight="600">4500 Hz</text>
+
+  <!-- Arrow: Input → AN1 -->
+  <line x1="110" y1="206" x2="150" y2="206" stroke="#58a6ff" stroke-width="1.8" stroke-dasharray="5,3">
+    <animate attributeName="stroke-dashoffset" from="8" to="0" dur="0.6s" repeatCount="indefinite"/>
+  </line>
+  <polygon points="148,201 160,206 148,211" fill="#58a6ff" opacity="0.85"/>
+
+  <!-- ==================== AN1 NEURON ==================== -->
+  <!-- Position: cx=200, cy=206 -->
+  <g filter="url(#gl)">
+    <circle cx="200" cy="206" r="38" fill="#0d1117" stroke="#58a6ff" stroke-width="2.5">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="200" cy="206" r="26" fill="none" stroke="#58a6ff" stroke-width="0.8" opacity="0.3">
+      <animate attributeName="r" values="20;30;20" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.08;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <text x="200" y="201" font-family="'Segoe UI',system-ui,sans-serif" font-size="17" font-weight="700" fill="#58a6ff" text-anchor="middle">AN1</text>
+  <text x="200" y="218" font-family="'SF Mono',monospace" font-size="9" fill="#7d8590" text-anchor="middle">Receptor</text>
+
+  <!-- ==================== SYNAPSE: AN1 → LN2  (inhibitory, 3ms) ==================== -->
+  <!-- LN2 is at cx=430, cy=85  —  curve goes up-right -->
+  <path id="p-a-l2" d="M 234,190 C 310,175 340,95 400,90" fill="none" stroke="#f85149" stroke-width="2" stroke-dasharray="5,4" opacity="0.65">
+    <animate attributeName="stroke-dashoffset" from="9" to="0" dur="1s" repeatCount="indefinite"/>
+  </path>
+  <use href="#dot-inh"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#p-a-l2"/></animateMotion></use>
+  <!-- Delay label — positioned on the curve midpoint, no overlap -->
+  <rect x="300" y="118" width="44" height="18" rx="4" fill="#161b22" stroke="#30363d" stroke-width="0.5"/>
+  <text x="322" y="131" font-family="'SF Mono',monospace" font-size="9" fill="#f85149" text-anchor="middle" font-weight="600">3 ms</text>
+
+  <!-- ==================== SYNAPSE: AN1 → LN3  (excitatory, 2ms) ==================== -->
+  <!-- LN3 is at cx=430, cy=206  —  straight horizontal -->
+  <path id="p-a-l3" d="M 238,206 C 310,206 350,206 398,206" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-dasharray="7,3" opacity="0.8">
+    <animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.7s" repeatCount="indefinite"/>
+  </path>
+  <use href="#dot-exc"><animateMotion dur="0.7s" repeatCount="indefinite"><mpath href="#p-a-l3"/></animateMotion></use>
+  <rect x="300" y="186" width="44" height="18" rx="4" fill="#161b22" stroke="#30363d" stroke-width="0.5"/>
+  <text x="322" y="199" font-family="'SF Mono',monospace" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="600">2 ms</text>
+
+  <!-- ==================== SYNAPSE: AN1 → LN5  (inhibitory, 5ms) ==================== -->
+  <!-- LN5 is at cx=430, cy=330  —  curve goes down-right -->
+  <path id="p-a-l5" d="M 234,224 C 310,240 340,315 400,325" fill="none" stroke="#f85149" stroke-width="2" stroke-dasharray="5,4" opacity="0.65">
+    <animate attributeName="stroke-dashoffset" from="9" to="0" dur="1.4s" repeatCount="indefinite"/>
+  </path>
+  <use href="#dot-inh"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#p-a-l5"/></animateMotion></use>
+  <rect x="300" y="278" width="44" height="18" rx="4" fill="#161b22" stroke="#30363d" stroke-width="0.5"/>
+  <text x="322" y="291" font-family="'SF Mono',monospace" font-size="9" fill="#f85149" text-anchor="middle" font-weight="600">5 ms</text>
+
+  <!-- ==================== LN2 NEURON (inhibitory) ==================== -->
+  <!-- Position: cx=430, cy=85 -->
+  <circle cx="430" cy="85" r="30" fill="#0d1117" stroke="#f85149" stroke-width="2"/>
+  <circle cx="430" cy="85" r="20" fill="none" stroke="#f85149" stroke-width="0.6" opacity="0.2">
+    <animate attributeName="r" values="15;24;15" dur="2.5s" repeatCount="indefinite"/>
+  </circle>
+  <text x="430" y="80" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" font-weight="700" fill="#f85149" text-anchor="middle">LN2</text>
+  <text x="430" y="96" font-family="'SF Mono',monospace" font-size="8.5" fill="#7d8590" text-anchor="middle">Inhibitory</text>
+
+  <!-- ==================== LN3 NEURON (excitatory) ==================== -->
+  <!-- Position: cx=430, cy=206 -->
+  <circle cx="430" cy="206" r="30" fill="#0d1117" stroke="#3fb950" stroke-width="2.5">
+    <animate attributeName="stroke-width" values="2.5;3.8;2.5" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="430" cy="206" r="20" fill="none" stroke="#3fb950" stroke-width="0.6" opacity="0.3">
+    <animate attributeName="r" values="15;24;15" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <text x="430" y="201" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" font-weight="700" fill="#3fb950" text-anchor="middle">LN3</text>
+  <text x="430" y="217" font-family="'SF Mono',monospace" font-size="8.5" fill="#7d8590" text-anchor="middle">Excitatory</text>
+
+  <!-- ==================== LN5 NEURON (inhibitory) ==================== -->
+  <!-- Position: cx=430, cy=330 -->
+  <circle cx="430" cy="330" r="30" fill="#0d1117" stroke="#f85149" stroke-width="2"/>
+  <circle cx="430" cy="330" r="20" fill="none" stroke="#f85149" stroke-width="0.6" opacity="0.2">
+    <animate attributeName="r" values="15;24;15" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <text x="430" y="325" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" font-weight="700" fill="#f85149" text-anchor="middle">LN5</text>
+  <text x="430" y="341" font-family="'SF Mono',monospace" font-size="8.5" fill="#7d8590" text-anchor="middle">Inhibitory</text>
+
+  <!-- ==================== SYNAPSE: LN2 → ON1  (inhibitory, 1ms) ==================== -->
+  <path id="p-l2-o" d="M 460,90 C 510,95 540,165 580,190" fill="none" stroke="#f85149" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.55">
+    <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.5s" repeatCount="indefinite"/>
+  </path>
+  <use href="#dot-inh" opacity="0.6"><animateMotion dur="0.5s" repeatCount="indefinite"><mpath href="#p-l2-o"/></animateMotion></use>
+  <text x="524" y="126" font-family="'SF Mono',monospace" font-size="8" fill="#484f58" text-anchor="middle">1ms</text>
+
+  <!-- ==================== SYNAPSE: LN3 → ON1  (excitatory, 1ms) ==================== -->
+  <path id="p-l3-o" d="M 460,206 C 500,206 540,206 578,206" fill="none" stroke="#3fb950" stroke-width="2.2" stroke-dasharray="7,3" opacity="0.8">
+    <animate attributeName="stroke-dashoffset" from="10" to="0" dur="0.5s" repeatCount="indefinite"/>
+  </path>
+  <use href="#dot-exc"><animateMotion dur="0.5s" repeatCount="indefinite"><mpath href="#p-l3-o"/></animateMotion></use>
+  <text x="524" y="198" font-family="'SF Mono',monospace" font-size="8" fill="#484f58" text-anchor="middle">1ms</text>
+
+  <!-- ==================== SYNAPSE: LN5 → ON1  (inhibitory, 1ms) ==================== -->
+  <path id="p-l5-o" d="M 460,325 C 510,320 540,250 580,222" fill="none" stroke="#f85149" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.55">
+    <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.5s" repeatCount="indefinite"/>
+  </path>
+  <use href="#dot-inh" opacity="0.6"><animateMotion dur="0.5s" repeatCount="indefinite"><mpath href="#p-l5-o"/></animateMotion></use>
+  <text x="524" y="290" font-family="'SF Mono',monospace" font-size="8" fill="#484f58" text-anchor="middle">1ms</text>
+
+  <!-- ==================== ON1 OUTPUT NEURON ==================== -->
+  <!-- Position: cx=614, cy=206 -->
+  <g filter="url(#gl2)">
+    <circle cx="614" cy="206" r="38" fill="#0d1117" stroke="#e94560" stroke-width="2.5">
+      <animate attributeName="r" values="38;44;38" dur="3s" begin="1.8s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#0d1117;#2a0a14;#0d1117" dur="3s" begin="1.8s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Spike flash ring -->
+    <circle cx="614" cy="206" r="38" fill="none" stroke="#e94560" stroke-width="1.2" opacity="0">
+      <animate attributeName="r" values="38;60" dur="0.9s" begin="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0" dur="0.9s" begin="2.4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <text x="614" y="201" font-family="'Segoe UI',system-ui,sans-serif" font-size="17" font-weight="700" fill="#e94560" text-anchor="middle">ON1</text>
+  <text x="614" y="218" font-family="'SF Mono',monospace" font-size="9" fill="#7d8590" text-anchor="middle">Coincidence</text>
+
+  <!-- ==================== OUTPUT SPIKE ==================== -->
+  <line x1="652" y1="206" x2="698" y2="206" stroke="#e94560" stroke-width="2.5">
+    <animate attributeName="opacity" values="0.2;1;0.2" dur="3s" begin="1.8s" repeatCount="indefinite"/>
+  </line>
+  <polygon points="696,200 710,206 696,212" fill="#e94560">
+    <animate attributeName="opacity" values="0.2;1;0.2" dur="3s" begin="1.8s" repeatCount="indefinite"/>
+  </polygon>
+  <rect x="712" y="188" width="40" height="36" rx="6" fill="#2a0a14" stroke="#e94560" stroke-width="1.5">
+    <animate attributeName="fill" values="#2a0a14;#3d1020;#2a0a14" dur="3s" begin="1.8s" repeatCount="indefinite"/>
+  </rect>
+  <text x="732" y="204" font-family="'SF Mono',monospace" font-size="9" fill="#e94560" text-anchor="middle" font-weight="700">SPIKE</text>
+  <text x="732" y="218" font-family="'SF Mono',monospace" font-size="7.5" fill="#8b6570" text-anchor="middle">A&gt;0.7</text>
+
+  <!-- ==================== FORMULA BAR ==================== -->
+  <rect x="22" y="390" width="716" height="34" rx="7" fill="#161b22" stroke="#30363d" stroke-width="0.5"/>
+  <text x="380" y="412" font-family="'SF Mono','Fira Code',monospace" font-size="11.5" fill="#8b949e" text-anchor="middle">
+    fire(t) = [ A(t) &gt; θ ]  ∧  [ A(t − τ) &gt; θ × 0.8 ]      |      R(f) = exp( −(Δf / f₀ / w)² )
+  </text>
+
+  <!-- ==================== USE-CASE CAROUSEL (bottom) ==================== -->
+  <!-- 5 use cases, each visible 10s, total cycle 50s -->
+  <!-- Position: y=440..530, full width -->
+  <rect x="22" y="440" width="716" height="86" rx="8" fill="#161b22" stroke="#30363d" stroke-width="0.5"/>
+
+  <!-- Use Case 1: Medical / EKG (visible 0-10s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;1;1;0;0;0;0;0;0;0;0" dur="50s" repeatCount="indefinite"
+      keyTimes="0;0.02;0.18;0.2;0.22;0.4;0.42;0.6;0.62;0.8;1"/>
+    <text x="50" y="470" font-size="24">🫀</text>
+    <text x="86" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" fill="#e6edf3" font-weight="700">Medical — ECG Rhythm Classification</text>
+    <text x="86" y="488" font-family="'SF Mono',monospace" font-size="10.5" fill="#8b949e">Real-time arrhythmia detection on wearables. 0.1 μs latency. HIPAA/GDPR-ready privacy mode.</text>
+    <text x="86" y="508" font-family="'SF Mono',monospace" font-size="10.5" fill="#58a6ff">→  cargo run --release --example sentinel_ecg_monitor</text>
+  </g>
+
+  <!-- Use Case 2: Industrial IoT (visible 10-20s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;1;1;0;0;0;0;0" dur="50s" repeatCount="indefinite"
+      keyTimes="0;0.02;0.18;0.2;0.22;0.38;0.4;0.6;0.62;0.8;1"/>
+    <text x="50" y="470" font-size="24">⚙️</text>
+    <text x="86" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" fill="#e6edf3" font-weight="700">Industrial IoT — Predictive Maintenance</text>
+    <text x="86" y="488" font-family="'SF Mono',monospace" font-size="10.5" fill="#8b949e">Detect bearing failures at the sensor node. No cloud, no gateway. Runs on ESP32 / STM32.</text>
+    <text x="86" y="508" font-family="'SF Mono',monospace" font-size="10.5" fill="#58a6ff">→  cargo run --example arduino_minimal    (944 bytes RAM)</text>
+  </g>
+
+  <!-- Use Case 3: Audio / Wake-Word (visible 20-30s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0;0" dur="50s" repeatCount="indefinite"
+      keyTimes="0;0.02;0.18;0.2;0.22;0.38;0.4;0.42;0.58;0.6;1"/>
+    <text x="50" y="470" font-size="24">🎙️</text>
+    <text x="86" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" fill="#e6edf3" font-weight="700">Audio — Wake-Word Detection</text>
+    <text x="86" y="488" font-family="'SF Mono',monospace" font-size="10.5" fill="#8b949e">Sub-millisecond keyword detection. Fully offline, no cloud roundtrip. Zero training needed.</text>
+    <text x="86" y="508" font-family="'SF Mono',monospace" font-size="10.5" fill="#58a6ff">→  cargo run --example sequence_predict    (pattern matching)</text>
+  </g>
+
+  <!-- Use Case 4: Security (visible 30-40s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;1;1;0" dur="50s" repeatCount="indefinite"
+      keyTimes="0;0.02;0.18;0.2;0.22;0.38;0.4;0.42;0.58;0.6;0.62;0.78;1"/>
+    <text x="50" y="470" font-size="24">🛡️</text>
+    <text x="86" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" fill="#e6edf3" font-weight="700">Security — Network Intrusion Detection</text>
+    <text x="86" y="488" font-family="'SF Mono',monospace" font-size="10.5" fill="#8b949e">Detect C2 beaconing and DDoS patterns at line rate. 40k+ parallel signatures.</text>
+    <text x="86" y="508" font-family="'SF Mono',monospace" font-size="10.5" fill="#58a6ff">→  cargo run --release --example scale_test    (40,960 neurons)</text>
+  </g>
+
+  <!-- Use Case 5: Quality Control (visible 40-50s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;0;0;0;1;1" dur="50s" repeatCount="indefinite"
+      keyTimes="0;0.02;0.18;0.2;0.22;0.38;0.4;0.42;0.58;0.6;0.62;0.78;0.8;0.82;1"/>
+    <text x="50" y="470" font-size="24">🔬</text>
+    <text x="86" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" fill="#e6edf3" font-weight="700">Research — Acoustic Quality Control</text>
+    <text x="86" y="488" font-family="'SF Mono',monospace" font-size="10.5" fill="#8b949e">Deterministic pattern matching on a $5 microcontroller. 100% reproducible results.</text>
+    <text x="86" y="508" font-family="'SF Mono',monospace" font-size="10.5" fill="#58a6ff">→  cargo run --release --example baselines    (scientific comparison)</text>
+  </g>
+</svg>

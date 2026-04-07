@@ -1,0 +1,99 @@
+[workspace]
+members = ["crates/core", "crates/ffi", "crates/python", "crates/wasm"]
+
+[package]
+name = "cricket-brain"
+version = "3.0.0"
+edition = "2021"
+rust-version = "1.75"
+description = "A biomorphic AI inference engine based on the Münster model of cricket hearing. Uses delay-line coincidence detection for pattern recognition — no matrix multiplication, no CUDA, no weights."
+license = "AGPL-3.0-only"
+repository = "https://github.com/BEKO2210/cricket-brain"
+documentation = "https://docs.rs/cricket-brain"
+homepage = "https://github.com/BEKO2210/cricket-brain"
+readme = "README.md"
+keywords = ["neuromorphic", "biomorphic", "inference", "no-std", "delay-line"]
+categories = ["science", "algorithms", "embedded", "no-std"]
+
+[features]
+default = ["std"]
+std = []
+no_std = []
+telemetry = []
+serde = ["dep:serde"]
+parallel = ["dep:rayon"]
+cli = ["dep:clap", "dep:miette", "dep:toml", "dep:serde_json", "serde", "std"]
+
+[dependencies]
+cricket-brain-core = { version = "3.0.0", path = "crates/core" }
+serde = { version = "1", features = ["derive"], optional = true }
+rayon = { version = "1.11", optional = true }
+clap = { version = "4.6", features = ["derive"], optional = true }
+miette = { version = "7", features = ["fancy"], optional = true }
+toml = { version = "0.8", optional = true }
+serde_json = { version = "1", optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.6"
+
+[[bench]]
+name = "throughput"
+harness = false
+
+[[example]]
+name = "arduino_minimal"
+path = "examples/arduino_minimal.rs"
+
+[[example]]
+name = "morse_alphabet"
+path = "examples/morse_alphabet.rs"
+
+[[example]]
+name = "scale_test"
+path = "examples/scale_test.rs"
+
+[[example]]
+name = "live_demo"
+path = "examples/live_demo.rs"
+
+[[example]]
+name = "frequency_discrimination"
+path = "examples/frequency_discrimination.rs"
+
+[[example]]
+name = "multi_freq_demo"
+path = "examples/multi_freq_demo.rs"
+
+[[example]]
+name = "sequence_predict"
+path = "examples/sequence_predict.rs"
+
+[[example]]
+name = "scale_predict"
+path = "examples/scale_predict.rs"
+
+[[example]]
+name = "profile_speed"
+path = "examples/profile_speed.rs"
+
+[[example]]
+name = "research_gen"
+path = "examples/research_gen.rs"
+
+[[example]]
+name = "ablation_study"
+path = "examples/ablation_study.rs"
+
+[[example]]
+name = "sentinel_ecg_monitor"
+path = "examples/sentinel_ecg_monitor.rs"
+
+[[example]]
+name = "cricket_cli"
+path = "examples/cricket_cli.rs"
+required-features = ["cli"]
+
+[[example]]
+name = "baselines"
+path = "examples/baselines.rs"
