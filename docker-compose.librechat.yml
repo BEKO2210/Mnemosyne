@@ -1,0 +1,54 @@
+# Mnemosyne + LibreChat + Ollama — Full Stack
+# =============================================
+#
+# Start:  docker compose -f docker-compose.librechat.yml up -d
+# Stop:   docker compose -f docker-compose.librechat.yml down
+# Open:   http://localhost:3080
+#
+# First run pulls images (~5GB) and Ollama model (~2.5GB).
+# After that, startup takes ~10 seconds.
+
+services:
+  # ─── LibreChat (Frontend) ──────────────────────────────────
+  librechat:
+    image: ghcr.io/danny-avila/librechat:latest
+    container_name: mnemosyne-chat
+    ports:
+      - "3080:3080"
+    volumes:
+      - ./librechat.yaml:/app/librechat.yaml
+      - librechat-data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/LibreChat
+      - MEILI_HOST=http://meilisearch:7700
+      - ENDPOINTS=custom
+      - CONFIG_PATH=/app/librechat.yaml
+    depends_on:
+      - mongodb
+      - meilisearch
+    restart: unless-stopped
+
+  # ─── MongoDB (LibreChat data) ──────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: mnemosyne-db
+    volumes:
+      - mongodb-data:/data/db
+    restart: unless-stopped
+
+  # ─── MeiliSearch (LibreChat conversation search) ───────────
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    container_name: mnemosyne-search
+    volumes:
+      - meilisearch-data:/meili_data
+    environment:
+      - MEILI_NO_ANALYTICS=true
+    restart: unless-stopped
+
+volumes:
+  librechat-data:
+  mongodb-data:
+  meilisearch-data:
