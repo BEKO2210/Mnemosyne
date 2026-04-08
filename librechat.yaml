@@ -1,0 +1,53 @@
+# Mnemosyne LibreChat Configuration
+# ===================================
+#
+# Start with: docker compose -f docker-compose.librechat.yml up -d
+# Open: http://localhost:3080
+#
+# This connects LibreChat to:
+#   1. Ollama (local LLM — phi3.5 or qwen2.5)
+#   2. Mnemosyne MCP Server (25 tools)
+
+version: 1.2.1
+
+endpoints:
+  # Local Ollama models
+  custom:
+    - name: "Ollama"
+      apiKey: "ollama"
+      baseURL: "http://host.docker.internal:11434/v1"
+      models:
+        default: ["phi3.5", "qwen2.5:7b-instruct"]
+        fetch: true
+      titleConversation: true
+      titleModel: "phi3.5"
+      summarize: true
+      summaryModel: "phi3.5"
+      dropParams: ["stop", "user", "frequency_penalty", "presence_penalty"]
+
+# MCP Server — Mnemosyne's 25 tools
+mcpServers:
+  mnemosyne:
+    # Stdio transport: LibreChat spawns the process directly
+    type: stdio
+    command: python
+    args:
+      - "-m"
+      - "mempalace.mcp_server"
+    env:
+      FIRSTBRAIN_VAULT_PATH: "${FIRSTBRAIN_VAULT_PATH:-}"
+      OLLAMA_MODEL: "${OLLAMA_MODEL:-phi3.5}"
+      OLLAMA_URL: "http://host.docker.internal:11434"
+    timeout: 30000
+
+# Registration — allow open signup for local use
+registration:
+  socialLogins: []
+  allowedDomains: []
+
+# Interface
+interface:
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  presets: true

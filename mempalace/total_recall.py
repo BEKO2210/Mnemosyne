@@ -591,11 +591,60 @@ class TotalRecall:
         }
 
         self.expander = QueryExpander(model=ollama_model)
+        self._reranker = None
+        # Reranker disabled by default — helps at scale (100+ docs),
+        # hurts on small corpora by distorting multi-source fusion.
+        # Enable with: tr.enable_reranker()
+        # self._init_reranker()
         self.adapters = {
             "mnemosyne": MnemosyneAdapter(palace_path=palace_path),
             "firstbrain": FirstbrainAdapter(vault_path=vault_path),
             "cricket": CricketAdapter(engine_path=cricket_path),
         }
+
+    def enable_reranker(self):
+        """Enable cross-encoder re-ranking. Recommended for 100+ documents."""
+        self._init_reranker()
+        return {"reranker": "enabled" if self._reranker else "failed to load"}
+
+    def _init_reranker(self):
+        """Load cross-encoder reranker (lazy, once)."""
+        try:
+            from sentence_transformers import CrossEncoder
+            self._reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-12-v2")
+            logger.info("Reranker loaded: ms-marco-MiniLM-L-12-v2")
+        except Exception:
+            self._reranker = None
+
+    def _rerank(self, hits: list, query: str) -> list:
+        """
+        Re-score hits using cross-encoder as BOOST signal (not replacement).
+
+        The cross-encoder score is added as a bonus to the original similarity,
+        not as a replacement. This preserves the calibrated ChromaDB distances
+        while letting the cross-encoder promote results it finds relevant.
+        """
+        if not self._reranker or not hits:
+            return hits
+
+        pairs = [(query, hit.text[:512]) for hit in hits]
+        try:
+            scores = self._reranker.predict(pairs)
+        except Exception:
+            return hits
+
+        # Sigmoid normalization: raw logits → 0-1 probability
+        # This preserves absolute quality (unlike min-max normalization)
+        for hit, score in zip(hits, scores):
+            sigmoid = 1.0 / (1.0 + math.exp(-float(score)))
+            # Blend: keep 70% original similarity + 30% reranker score
+            original = hit.similarity
+            hit.similarity = round(original * 0.7 + sigmoid * 0.3, 4)
+            hit.metadata["reranker_raw"] = round(float(score), 4)
+            hit.metadata["reranker_sigmoid"] = round(sigmoid, 4)
+            hit.metadata["similarity_original"] = round(original, 4)
+
+        return hits
 
     def search(
         self,
@@ -639,7 +688,11 @@ class TotalRecall:
 
             all_hits.extend(hits)
 
-        # Step 2: Cricket-Brain relevance boost (uses ORIGINAL query for precision)
+        # Step 2: Cross-encoder re-ranking (boosts similarity scores)
+        if all_hits and self._reranker is not None:
+            all_hits = self._rerank(all_hits, original_query)
+
+        # Step 3: Cricket-Brain relevance boost (uses ORIGINAL query for precision)
         cricket = self.adapters.get("cricket")
         if cricket and cricket.available():
             sources_queried.append("cricket")
@@ -647,12 +700,13 @@ class TotalRecall:
                 boost = cricket.compute_relevance(hit.text, original_query)
                 hit.relevance_boost = boost
 
-        # Step 3: Fuse, dedup, rank
+        # Step 4: Fuse, dedup, rank
         ranked = self._fuse_and_rank(all_hits, limit, original_query)
 
         return {
             "query": original_query,
             "expanded_query": expanded_query if used_expansion else None,
+            "reranked": self._reranker is not None,
             "sources_queried": sources_queried,
             "total_hits": len(all_hits),
             "results": [_hit_to_dict(h) for h in ranked],
@@ -668,6 +722,7 @@ class TotalRecall:
             "available": available,
             "weights": self.weights,
             "query_expansion": self.expander.status(),
+            "reranker": "ms-marco-MiniLM-L-12-v2" if self._reranker else None,
         }
 
     def configure(self, **kwargs) -> dict:
